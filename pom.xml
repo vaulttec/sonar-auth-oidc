@@ -1,0 +1,159 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.sonarsource.parent</groupId>
+    <artifactId>parent</artifactId>
+    <version>41</version>
+  </parent>
+
+  <groupId>org.vaulttec.sonarqube.auth.oidc</groupId>
+  <artifactId>sonar-auth-oidc-plugin</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>sonar-plugin</packaging>
+  <name>OpenID Connect Authentication for SonarQube</name>
+  <description>OpenID Connect Authentication for SonarQube</description>
+  <inceptionYear>2017</inceptionYear>
+  <url>https://github.com/vaulttec/sonar-auth-oidc</url>
+
+  <licenses>
+    <license>
+      <name>APACHE 2</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <sonar.pluginClass>org.vaulttec.sonarqube.auth.oidc.AuthOidcPlugin</sonar.pluginClass>
+    <sonar-plugin-api.version>5.6</sonar-plugin-api.version>
+    <nimbusds-oidc-sdk.version>5.43</nimbusds-oidc-sdk.version>
+
+    <license.name>AL2</license.name>
+    <license.owner>Torsten Juergeleit</license.owner>
+    <license.title>${project.name}</license.title>
+    <license.years>${project.inceptionYear}</license.years>
+    <license.mailto>mailto:torsten AT vaulttec DOT org</license.mailto>
+  </properties>
+
+  <issueManagement>
+    <system>github</system>
+    <url>https://github.com/vaulttec/sonar-auth-oidc/issues</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>travis-ci</system>
+    <url>https://travis-ci.org/vaulttec/sonar-auth-oidc</url>
+  </ciManagement>
+
+  <scm>
+    <connection>scm:git:https://github.com/vaulttec/sonar-auth-oidc.git</connection>
+    <developerConnection>scm:git:git@github.com:vaulttec/sonar-auth-oidc.git</developerConnection>
+    <url>https://github.com/vaulttec/sonar-auth-oidc</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>tjuerge</id>
+      <name>Torsten Juergeleit</name>
+      <organization>Vaulttec</organization>
+    </developer>
+  </developers>
+
+  <organization>
+    <name>Vaulttec</name>
+    <url>http://vaulttec.org</url>
+  </organization>
+
+	<build>
+		<plugins>
+		  <!-- Disable deploy plugin and use GitHub deployment instead -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>de.jutzig</groupId>
+				<artifactId>github-release-plugin</artifactId>
+				<version>1.2.0</version>
+				<executions>
+					<execution>
+						<id>github-upload</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>release</goal>
+						</goals>
+						<inherited>false</inherited>
+						<configuration>
+							<releaseName>v${project.version}</releaseName>
+							<tag>v${project.version}</tag>
+							<artifact>${project.build.directory}/${project.artifactId}-${project.version}.jar</artifact>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>	
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.sonarsource.sonarqube</groupId>
+      <artifactId>sonar-plugin-api</artifactId>
+      <version>${sonar-plugin-api.version}</version>
+      <scope>provided</scope>
+    </dependency>
+	<dependency>
+		<groupId>com.nimbusds</groupId>
+		<artifactId>oauth2-oidc-sdk</artifactId>
+		<version>${nimbusds-oidc-sdk.version}</version>
+	</dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.0.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>2.13.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <version>3.9.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
