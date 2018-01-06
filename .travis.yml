@@ -1,14 +1,22 @@
 language: java
 
-jdk:
-  - oraclejdk8
-
-script: mvn verify -Dmaven.test.redirectTestOutputToFile=false -B -e -V
+sudo: false
 
 install: true
 
-sudo: false
+addons:
+  sonarcloud:
+    organization: "vaulttec"
+    token:
+      secure: "Y2GPc0mL/HAwVZyWs43yWCmZQTYpaU04YDFam5rwpAZ32xiBr76wXZqYw0Nh5rEtZkcu8hQkwiAXc78ChNRIXdI9CYZnCHh0De2+t6YcQrYGzWuv8j0l85DBLOd/wRRFiiPVn110XqQdyTW9Sl/QuTKNeU14rIc2oDcFvY58IO6B5bKmdJv5jiC/+eDNuXvfTNxqLtJkUB0ot7Xcj2k6cfQfaVHkkALgYSyBw4tbsTVtPKGGSIVBk0HV1DeJPExOMfgbGy6x77gStg9L/15uTWsY2ESRSJ4EsgiUv6JdyruHdzBxhMg17RNoSCnBUUgrOQB6bcg2eoZYhJ56aMJBrd54iCj2E8lJ5l9jOvM6f4NHIYRmYFNVaNv85Tjjj4CctbC9L4Phbj/oYi78kzA9aFeRgfRT66doK/G7pUM41UBwQnH1WNruvUwu5jjnqs4NnyxEDhOEF0R8h0ajDZl6TdkftMMn6D8qijUpDFZG7zD31GEqeE3jJcRjHbEWTiPCh72bygMPp8BTKoWYDFhmDVAM03xw78SPS/+H9LfVIArVjCfAV98JKuJSSL+hpXs1WII6tTtkShTNWYWQUpUxqUpgJYcp7rGDO3F1XmdlG66vEm0Hk9OoBjczaXNGkKj5ykk10C7rtdJFhDK0Ms2eNAhgzdPx9hwTkiF53Y8tPFo="
+
+jdk:
+  - oraclejdk8
+
+script:
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
 
 cache:
   directories:
-    - $HOME/.m2/repository
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
