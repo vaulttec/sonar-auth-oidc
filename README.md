@@ -24,7 +24,7 @@ file.
 ## Configuration
 
 - In OpenID Connect identity provider:
-  - Create a client with access type 'Public' or 'Confidential' and valid redirect URLs for the SonarQube server
+  - Create a client with access type 'public' or 'confidential' (in the latter case the corresponding client secret must be set in the plugin configuration) and valid redirect URI(s) for the SonarQube server
     ![Keycloak Client Configuration](docs/images/keycloak-client-config.png)
 
   - For synchronizing SonarQube groups create a mapper which adds group names to the userinfo claim `groups` in the ID token
@@ -34,7 +34,7 @@ file.
     ![Keycloak Client Configuration](docs/images/keycloak-endpoint-config.png)
 
 - In SonarQube administration (General-\> Security -\> OpenID Connect):
-  - Configure the plugin for the OpenID Connect client
+  - Configure the plugin for the OpenID Connect client (a client secret is only need for clients with access type 'confidential')
     ![SonarQube Plugin Configuration](docs/images/plugin-config.png)
 
 ## Tested with

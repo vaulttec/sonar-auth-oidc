@@ -104,8 +104,9 @@ public class OidcSettings {
 		    PropertyDefinition.builder(CLIENT_ID).name("Client ID").description("The ID of an OpenID Connect Client.")
 		        .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
 		    PropertyDefinition.builder(CLIENT_SECRET).name("Client secret")
-		        .description("For a confidential OpenID Connect client a shared secret is needed.").category(CATEGORY)
-		        .subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+		        .description("The shared secret of a non-public client. "
+		            + "This is only needed for an OpenID Connect client with access type \"confidential\".")
+		        .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
 		    PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up").description(
 		        "Allow new users to authenticate. When set to 'false', only existing users will be able to authenticate to the server.")
 		        .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
