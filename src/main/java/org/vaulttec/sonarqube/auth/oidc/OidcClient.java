@@ -54,8 +54,6 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
-import net.minidev.json.JSONStyle;
-
 @ServerSide
 public class OidcClient {
 
@@ -96,15 +94,14 @@ public class OidcClient {
 		}
 		if (authResponse instanceof AuthenticationErrorResponse) {
 			ErrorObject error = ((AuthenticationErrorResponse) authResponse).getErrorObject();
-			throw new IllegalStateException(
-			    "Authentication request failed: " + error.toJSONObject().toJSONString(JSONStyle.LT_COMPRESS));
+			throw new IllegalStateException("Authentication request failed: " + error.toJSONObject());
 		}
 		AuthorizationCode authorizationCode = ((AuthenticationSuccessResponse) authResponse).getAuthorizationCode();
 		LOGGER.debug("Authorization code: {}", authorizationCode.getValue());
 		return authorizationCode;
 	}
 
-	UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
+	public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
 		LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}",
 		    getProviderMetadata().getTokenEndpointURI());
 		TokenResponse tokenResponse;
@@ -113,12 +110,19 @@ public class OidcClient {
 			    new ClientSecretBasic(getClientId(), getClientSecret()),
 			    new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
 			HTTPResponse response = request.toHTTPRequest().send();
+			LOGGER.debug("Token response content: {}", response.getContent());
 			tokenResponse = OIDCTokenResponseParser.parse(response);
 		} catch (URISyntaxException | IOException | ParseException e) {
 			throw new IllegalStateException("Retrieving access token failed", e);
 		}
 		if (tokenResponse instanceof TokenErrorResponse) {
-			throw new IllegalStateException("Token request failed: " + ((TokenErrorResponse) tokenResponse).toJSONObject());
+			ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
+			if (errorObject == null || errorObject.getCode() == null) {
+				throw new IllegalStateException("Token request failed: No error code returned "
+				    + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
+			} else {
+				throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
+			}
 		}
 
 		UserInfo userInfo;

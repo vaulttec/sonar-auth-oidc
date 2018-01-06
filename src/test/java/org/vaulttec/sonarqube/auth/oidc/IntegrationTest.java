@@ -39,6 +39,8 @@ import org.junit.Test;
 import org.sonar.api.server.authentication.OAuth2IdentityProvider;
 import org.sonar.api.server.authentication.UserIdentity;
 
+import com.nimbusds.oauth2.sdk.http.CommonContentTypes;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -99,14 +101,16 @@ public class IntegrationTest extends AbstractOidcTest {
 
 	@Test
 	public void callback_throws_ISE_if_error_when_requesting_id_token() throws InterruptedException {
-		idp.enqueue(new MockResponse().setResponseCode(500).setBody("{error}"));
+		idp.enqueue(new MockResponse().addHeader("Content-Type", CommonContentTypes.APPLICATION_JSON).setResponseCode(500)
+		    .setBody("{\"error\":\"invalid_grant\",\"error_description\":\"Invalid resource owner credentials\"}"));
 		DumbCallbackContext callbackContext = new DumbCallbackContext(newAuthenticationRequest());
 
 		try {
 			underTest.callback(callbackContext);
 			failBecauseExceptionWasNotThrown(IllegalStateException.class);
 		} catch (IllegalStateException e) {
-			assertEquals("Token request failed: {\"error\":null}", e.getMessage());
+			assertEquals("Token request failed: {\"error_description\":\"Invalid resource owner credentials\","
+			    + "\"error\":\"invalid_grant\"}", e.getMessage());
 		}
 		assertThat(callbackContext.csrfStateVerified.get()).isTrue();
 		assertThat(callbackContext.userIdentity).isNull();
