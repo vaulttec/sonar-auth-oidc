@@ -40,7 +40,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
     ![Keycloak Client Configuration](docs/images/keycloak-endpoint-config.png)
 
 - In SonarQube administration (General-\> Security -\> OpenID Connect):
-  - Configure the plugin for the OpenID Connect client (a client secret is only need for clients with access type 'confidential')
+  - Configure the plugin for the OpenID Connect client (a client secret is only required for clients with access type 'confidential')
     ![SonarQube Plugin Configuration](docs/images/plugin-config.png)
 
 ## Tested with
