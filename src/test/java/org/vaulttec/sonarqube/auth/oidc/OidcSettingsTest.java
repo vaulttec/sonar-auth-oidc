@@ -18,7 +18,6 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_DEFAULT_VALUE;
 import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PROVIDER_ID;
 
 import org.junit.Test;
@@ -33,10 +32,8 @@ public class OidcSettingsTest {
 
 	@Test
 	public void is_enabled() {
-		settings.setProperty("sonar.auth.oidc.providerConfiguration", "https://test-company.oidc.org/");
+		settings.setProperty("sonar.auth.oidc.providerConfiguration", getProviderConfiguration());
 		settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
-		settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-		settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
 
 		settings.setProperty("sonar.auth.oidc.enabled", true);
 		assertThat(underTest.isEnabled()).isTrue();
@@ -46,23 +43,19 @@ public class OidcSettingsTest {
 	}
 
 	@Test
-	public void is_enabled_always_return_false_when_issuer_uri_is_null() {
-		settings.setProperty("sonar.auth.oidc.enabled", true);
-		settings.setProperty("sonar.auth.oidc.issuerUri", (String) null);
+	public void is_enabled_always_return_false_when_provider_configuration_is_null() {
+		settings.setProperty("sonar.auth.oidc.providerConfiguration", (String) null);
 		settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
-		settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-		settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
+		settings.setProperty("sonar.auth.oidc.enabled", true);
 
 		assertThat(underTest.isEnabled()).isFalse();
 	}
 
 	@Test
 	public void is_enabled_always_return_false_when_client_id_is_null() {
-		settings.setProperty("sonar.auth.oidc.enabled", true);
-		settings.setProperty("sonar.auth.oidc.issuerUri", "https://test-company.oidc.org/");
+		settings.setProperty("sonar.auth.oidc.providerConfiguration", getProviderConfiguration());
 		settings.setProperty("sonar.auth.oidc.clientId.secured", (String) null);
-		settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-		settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
+		settings.setProperty("sonar.auth.oidc.enabled", true);
 
 		assertThat(underTest.isEnabled()).isFalse();
 	}
@@ -74,8 +67,7 @@ public class OidcSettingsTest {
 
 	@Test
 	public void configure_provider_configurationi() throws Exception {
-		final String configuredConfiguration = "{\"issuer\":\"http://localhost/auth/realms/sso\","
-				+ "\"authorization_endpoint\":\"http://localhost/auth/realms/sso/protocol/openid-connect/auth\"}";
+		final String configuredConfiguration = getProviderConfiguration();
 
 		settings.setProperty("sonar.auth.oidc.providerConfiguration", configuredConfiguration);
 
@@ -121,6 +113,12 @@ public class OidcSettingsTest {
 	@Test
 	public void definitions() {
 		assertThat(OidcSettings.definitions()).hasSize(7);
+	}
+
+	private String getProviderConfiguration() {
+		final String configuredConfiguration = "{\"issuer\":\"http://localhost/auth/realms/sso\","
+		    + "\"authorization_endpoint\":\"http://localhost/auth/realms/sso/protocol/openid-connect/auth\"}";
+		return configuredConfiguration;
 	}
 
 }

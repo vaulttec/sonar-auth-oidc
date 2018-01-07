@@ -125,7 +125,7 @@ public class IntegrationTest extends AbstractOidcTest {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getMethod()).thenReturn("GET");
 		when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-		when(request.getQueryString()).thenReturn("state=" + STATE + "&code=" + CODE);
+		when(request.getQueryString()).thenReturn("state=" + STATE + "&code=" + VALID_CODE);
 		return request;
 	}
 

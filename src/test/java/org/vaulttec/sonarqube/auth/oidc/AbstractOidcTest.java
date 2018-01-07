@@ -28,7 +28,9 @@ public abstract class AbstractOidcTest {
 	public static final String ISSUER_URI = "https://oidc.org";
 	public static final String CALLBACK_URL = "http://localhost/callback";
 	public static final String STATE = "state";
-	public static final String CODE = "code";
+	public static final String VALID_CODE = "valid_code";
+	public static final String INVALID_CODE = "invalid_code";
+	public static final String INVALID_URL = "htp: / invalid . com";
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
