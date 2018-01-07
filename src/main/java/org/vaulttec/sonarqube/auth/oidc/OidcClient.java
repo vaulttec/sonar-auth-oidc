@@ -104,17 +104,7 @@ public class OidcClient {
 	public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
 		LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}",
 		    getProviderMetadata().getTokenEndpointURI());
-		TokenResponse tokenResponse;
-		try {
-			TokenRequest request = new TokenRequest(getProviderMetadata().getTokenEndpointURI(),
-			    new ClientSecretBasic(getClientId(), getClientSecret()),
-			    new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
-			HTTPResponse response = request.toHTTPRequest().send();
-			LOGGER.debug("Token response content: {}", response.getContent());
-			tokenResponse = OIDCTokenResponseParser.parse(response);
-		} catch (URISyntaxException | IOException | ParseException e) {
-			throw new IllegalStateException("Retrieving access token failed", e);
-		}
+		TokenResponse tokenResponse = getTokenResponse(authorizationCode, callbackUrl);
 		if (tokenResponse instanceof TokenErrorResponse) {
 			ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
 			if (errorObject == null || errorObject.getCode() == null) {
@@ -133,6 +123,21 @@ public class OidcClient {
 		}
 		LOGGER.debug("User info: {}", userInfo.toJSONObject());
 		return userInfo;
+	}
+
+	protected TokenResponse getTokenResponse(AuthorizationCode authorizationCode, String callbackUrl) {
+		TokenResponse tokenResponse;
+		try {
+			TokenRequest request = new TokenRequest(getProviderMetadata().getTokenEndpointURI(),
+			    new ClientSecretBasic(getClientId(), getClientSecret()),
+			    new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
+			HTTPResponse response = request.toHTTPRequest().send();
+			LOGGER.debug("Token response content: {}", response.getContent());
+			tokenResponse = OIDCTokenResponseParser.parse(response);
+		} catch (URISyntaxException | IOException | ParseException e) {
+			throw new IllegalStateException("Retrieving access token failed", e);
+		}
+		return tokenResponse;
 	}
 
 	private OIDCProviderMetadata getProviderMetadata() {
