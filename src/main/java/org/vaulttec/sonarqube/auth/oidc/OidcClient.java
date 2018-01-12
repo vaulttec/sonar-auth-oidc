@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.*;
-import org.sonar.api.internal.apachecommons.lang.StringUtils;
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
