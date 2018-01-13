@@ -23,6 +23,8 @@ import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.*;
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -43,14 +45,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
-import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest.Builder;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
-import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
-import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
-import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
@@ -121,6 +116,24 @@ public class OidcClient {
 		} catch (java.text.ParseException e) {
 			throw new IllegalStateException("Parsing ID token failed", e);
 		}
+
+		if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
+			LOGGER.debug("Retrieving user info from {}",
+					getProviderMetadata().getUserInfoEndpointURI());
+			UserInfoResponse userInfoResponse = getUserInfoResponse(((OIDCTokenResponse) tokenResponse).getOIDCTokens().getBearerAccessToken());
+			if (userInfoResponse instanceof UserInfoErrorResponse) {
+				ErrorObject errorObject = ((UserInfoErrorResponse)userInfoResponse).getErrorObject();
+				if (errorObject == null || errorObject.getCode() == null) {
+					throw new IllegalStateException("UserInfo request failed: No error code returned "
+							+ "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
+				} else {
+					throw new IllegalStateException("UserInfo request failed: " + errorObject.toJSONObject());
+				}
+			}
+			userInfo = ((UserInfoSuccessResponse)userInfoResponse).getUserInfo();
+		}
+
+
 		LOGGER.debug("User info: {}", userInfo.toJSONObject());
 		return userInfo;
 	}
@@ -138,6 +151,20 @@ public class OidcClient {
 			throw new IllegalStateException("Retrieving access token failed", e);
 		}
 		return tokenResponse;
+	}
+
+	protected UserInfoResponse getUserInfoResponse(BearerAccessToken accessToken) {
+		UserInfoResponse userInfoResponse;
+		try {
+			UserInfoRequest request = new UserInfoRequest(getProviderMetadata().getUserInfoEndpointURI(),
+					accessToken);
+			HTTPResponse response = request.toHTTPRequest().send();
+			LOGGER.debug("UserInfo response content: {}", response.getContent());
+			userInfoResponse = UserInfoResponse.parse(response);
+		} catch ( IOException | ParseException e) {
+			throw new IllegalStateException("Retrieving user information failed", e);
+		}
+		return userInfoResponse;
 	}
 
 	private OIDCProviderMetadata getProviderMetadata() {

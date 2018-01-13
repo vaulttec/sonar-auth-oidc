@@ -17,12 +17,10 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,6 +28,8 @@ import java.util.Collections;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import org.junit.Test;
 
 import com.nimbusds.jose.util.JSONObjectUtils;
@@ -72,7 +72,7 @@ public class OidcClientTest extends AbstractOidcTest {
 	}
 
 	@Test
-	public void getAuthorizationCode() throws URISyntaxException {
+	public void getAuthorizationCode() {
 		HttpServletRequest request = mock(HttpServletRequest.class);
 		when(request.getMethod()).thenReturn("GET");
 		when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
@@ -155,6 +155,69 @@ public class OidcClientTest extends AbstractOidcTest {
 		}
 	}
 
+	@Test
+	public void getUserInfoFromUserInfoEndpoint() throws java.text.ParseException, ParseException {
+		OIDCTokenResponse tokenResponse = getValidTokenResponseWithoutProfileInformation();
+		doReturn(tokenResponse).when(underTest).getTokenResponse(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		// user information response returned from user info endpoint
+		UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(new UserInfo(JSONObjectUtils.parse(
+				"{\"sub\":\"e65c9607-fd4e-4bcd-97b1-ca057616590e\","
+				+ "\"name\":\"John Doo\","
+				+ "\"preferred_username\":\"john.doo\","
+				+ "\"profile\":\"http://localhost:8080/hub/users/e65c9607-fd4e-4bcd-97b1-ca057616590e\","
+				+ "\"email\":\"john.doo@acme.com\","
+				+ "\"email_verified\":true}")));
+		doReturn(userInfoResponse).when(underTest).getUserInfoResponse(tokenResponse.getOIDCTokens().getBearerAccessToken());
+
+		doCallRealMethod().when(underTest).getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		UserInfo userInfo = underTest.getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+		assertEquals("e65c9607-fd4e-4bcd-97b1-ca057616590e", userInfo.getSubject().getValue());
+		assertEquals("john.doo", userInfo.getPreferredUsername());
+		assertEquals("John Doo", userInfo.getName());
+		assertEquals("http://localhost:8080/hub/users/e65c9607-fd4e-4bcd-97b1-ca057616590e", userInfo.getProfile().toString());
+		assertEquals("john.doo@acme.com", userInfo.getEmailAddress());
+		assertTrue(userInfo.getEmailVerified());
+	}
+
+	@Test
+	public void userInfoErrorResponse() throws java.text.ParseException, ParseException {
+		OIDCTokenResponse tokenResponse = getValidTokenResponseWithoutProfileInformation();
+		doReturn(tokenResponse).when(underTest).getTokenResponse(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject("some_error"));
+		doReturn(userInfoResponse).when(underTest).getUserInfoResponse(tokenResponse.getOIDCTokens().getBearerAccessToken());
+
+		doCallRealMethod().when(underTest).getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		try {
+			underTest.getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+			failBecauseExceptionWasNotThrown(IllegalStateException.class);
+		} catch (IllegalStateException e) {
+			assertEquals("UserInfo request failed: {\"error\":\"some_error\"}", e.getMessage());
+		}
+	}
+
+	@Test
+	public void userInfoErrorResponseWithoutErrorCode() throws java.text.ParseException, ParseException {
+		OIDCTokenResponse tokenResponse = getValidTokenResponseWithoutProfileInformation();
+		doReturn(tokenResponse).when(underTest).getTokenResponse(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject(null));
+		doReturn(userInfoResponse).when(underTest).getUserInfoResponse(tokenResponse.getOIDCTokens().getBearerAccessToken());
+
+		doCallRealMethod().when(underTest).getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+
+		try {
+			underTest.getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+			failBecauseExceptionWasNotThrown(IllegalStateException.class);
+		} catch (IllegalStateException e) {
+			assertEquals("UserInfo request failed: No error code returned "
+					+ "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')", e.getMessage());
+		}
+	}
+
 	private OidcClient newSpyOidcClient() {
 		setSettings(true);
 		OidcClient client = spy(new OidcClient(oidcSettings));
@@ -179,4 +242,14 @@ public class OidcClientTest extends AbstractOidcTest {
 		return client;
 	}
 
+	private OIDCTokenResponse getValidTokenResponseWithoutProfileInformation() throws java.text.ParseException, ParseException {
+
+		// valid token response, but without profile related information
+		return OIDCTokenResponse.parse(JSONObjectUtils.parse(
+				"{\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJzdWIiOiJlNjVjOTYwNy1mZDRlLTRiY2QtOTdiMS1jYTA1NzYxNjU5MGUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvaHViIiwiYXVkIjpbIjYwZGNhY2FmLThhOTQtNDE3Ny1iMmYyLTEzNDg0NjNmODhjZSJdLCJleHAiOjEuNTIzNTcyMTY3NTYxRTksImlhdCI6MS41MTU3OTYxNjc1OTdFOSwiYXV0aF90aW1lIjoxLjUxNTc5NjE2NzU2MUU5fQ.o_h3f6QK--p1Ru8pUquoLpvB1vdBCorUfdq_I8J_yBbjyPS4LUP9-e_xkXtql6yOSh9AewNUb7PSKnJOq-TlMMMlOr-Or676i1wT0hGQb2aKnzzFu7VYQOep8_6t-AQSXRhckaR5NIJnF6oxFWdTwhizcenO_Osf12R-PQOyQsA\","
+						+ "\"access_token\":\"1515799767598.60dcacaf-8a94-4177-b2f2-1348463f88ce.e65c9607-fd4e-4bcd-97b1-ca057616590e.0-0-0-0-0;1.MCwCFEjmjjDDL1yAQ+jYA+VxgYNNNr4hAhR66eAgXKfs6kOJehOALtRqw5wq9Q==\","
+						+ "\"token_type\":\"Bearer\","
+						+ "\"expires_in\":3600,"
+						+ "\"scope\":\"0-0-0-0-0\"}"));
+	}
 }
