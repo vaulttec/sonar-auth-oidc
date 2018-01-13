@@ -38,6 +38,7 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.ResponseType.Value;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -54,8 +55,8 @@ public class OidcClient {
 
 	private static final Logger LOGGER = Loggers.get(OidcClient.class);
 
-	private static final ResponseType RESPONSE_TYPE_CODE = ResponseType.getDefault();
-	private static final Scope SCOPE = Scope.parse("openid email profile");
+	private static final ResponseType RESPONSE_TYPE = new ResponseType(Value.CODE);
+	private static final Scope SCOPE = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
 
 	private final OidcSettings settings;
 
@@ -66,8 +67,7 @@ public class OidcClient {
 	public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
 		AuthenticationRequest request;
 		try {
-			Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE_CODE, SCOPE, getClientId(),
-			    new URI(callbackUrl));
+			Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, SCOPE, getClientId(), new URI(callbackUrl));
 			request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
 			    .build();
 		} catch (URISyntaxException e) {
