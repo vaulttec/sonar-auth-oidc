@@ -38,46 +38,46 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 @ServerSide
 public class UserIdentityFactory {
 
-	private final OidcSettings settings;
+  private final OidcSettings settings;
 
-	public UserIdentityFactory(OidcSettings settings) {
-		this.settings = settings;
-	}
+  public UserIdentityFactory(OidcSettings settings) {
+    this.settings = settings;
+  }
 
-	public UserIdentity create(UserInfo userInfo) {
-		UserIdentity.Builder builder = UserIdentity.builder().setProviderLogin(userInfo.getSubject().getValue())
-		    .setLogin(getLogin(userInfo)).setName(getName(userInfo)).setEmail(userInfo.getEmailAddress());
-		if (settings.syncGroups()) {
-			builder.setGroups(getGroups(userInfo));
-		}
-		return builder.build();
-	}
+  public UserIdentity create(UserInfo userInfo) {
+    UserIdentity.Builder builder = UserIdentity.builder().setProviderLogin(userInfo.getSubject().getValue())
+        .setLogin(getLogin(userInfo)).setName(getName(userInfo)).setEmail(userInfo.getEmailAddress());
+    if (settings.syncGroups()) {
+      builder.setGroups(getGroups(userInfo));
+    }
+    return builder.build();
+  }
 
-	private String getLogin(UserInfo userInfo) {
-		switch (settings.loginStrategy()) {
-		case LOGIN_STRATEGY_PREFERRED_USERNAME:
-			return userInfo.getPreferredUsername();
-		case LOGIN_STRATEGY_PROVIDER_ID:
-			return userInfo.getSubject().getValue();
-		case LOGIN_STRATEGY_UNIQUE:
-			return generateUniqueLogin(userInfo);
-		default:
-			throw new IllegalStateException(format("Login strategy not supported: %s", settings.loginStrategy()));
-		}
-	}
+  private String getLogin(UserInfo userInfo) {
+    switch (settings.loginStrategy()) {
+    case LOGIN_STRATEGY_PREFERRED_USERNAME:
+      return userInfo.getPreferredUsername();
+    case LOGIN_STRATEGY_PROVIDER_ID:
+      return userInfo.getSubject().getValue();
+    case LOGIN_STRATEGY_UNIQUE:
+      return generateUniqueLogin(userInfo);
+    default:
+      throw new IllegalStateException(format("Login strategy not supported: %s", settings.loginStrategy()));
+    }
+  }
 
-	private String generateUniqueLogin(UserInfo userInfo) {
-		return format("%s@%s", userInfo.getSubject().getValue(), OidcIdentityProvider.KEY);
-	}
+  private String generateUniqueLogin(UserInfo userInfo) {
+    return format("%s@%s", userInfo.getSubject().getValue(), OidcIdentityProvider.KEY);
+  }
 
-	private String getName(UserInfo userInfo) {
-		String name = userInfo.getName();
-		return name == null || name.isEmpty() ? userInfo.getPreferredUsername() : name;
-	}
+  private String getName(UserInfo userInfo) {
+    String name = userInfo.getName();
+    return name == null || name.isEmpty() ? userInfo.getPreferredUsername() : name;
+  }
 
-	private Set<String> getGroups(UserInfo userInfo) {
-		List<String> groupsClaim = userInfo.getStringListClaim("groups");
-		return groupsClaim != null ? new HashSet<>(groupsClaim) : Collections.emptySet();
-	}
+  private Set<String> getGroups(UserInfo userInfo) {
+    List<String> groupsClaim = userInfo.getStringListClaim("groups");
+    return groupsClaim != null ? new HashSet<>(groupsClaim) : Collections.emptySet();
+  }
 
 }

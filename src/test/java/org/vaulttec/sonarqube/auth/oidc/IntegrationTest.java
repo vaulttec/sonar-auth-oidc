@@ -47,171 +47,171 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 public class IntegrationTest extends AbstractOidcTest {
 
-	@Rule
-	public MockWebServer idp = new MockWebServer();
-	private String idpUri = format("http://%s:%d", idp.getHostName(), idp.getPort());
+  @Rule
+  public MockWebServer idp = new MockWebServer();
+  private String idpUri = format("http://%s:%d", idp.getHostName(), idp.getPort());
 
-	OidcClient oidcClient = new OidcClient(oidcSettings);
-	UserIdentityFactory userIdentityFactory = new UserIdentityFactory(oidcSettings);
-	OidcIdentityProvider underTest = new OidcIdentityProvider(oidcSettings, oidcClient, userIdentityFactory);
+  OidcClient oidcClient = new OidcClient(oidcSettings);
+  UserIdentityFactory userIdentityFactory = new UserIdentityFactory(oidcSettings);
+  OidcIdentityProvider underTest = new OidcIdentityProvider(oidcSettings, oidcClient, userIdentityFactory);
 
-	@Before
-	public void enableSettings() {
-		setSettings(true, idpUri);
-	}
+  @Before
+  public void enableSettings() {
+    setSettings(true, idpUri);
+  }
 
-	/**
-	 * First phase: SonarQube redirects browser to OpenID connect provider's
-	 * authentication form, requesting the minimal access rights ("scope") to get
-	 * user profile.
-	 */
-	@Test
-	public void redirect_browser_to_oidc_authentication_form() throws Exception {
-		DumbInitContext context = new DumbInitContext("the-csrf-state");
-		underTest.init(context);
-		assertThat(context.redirectedTo).startsWith(idp.url("protocol/openid-connect/auth").toString())
-		    .contains("scope=" + encode("openid email profile", StandardCharsets.UTF_8.name()));
-	}
+  /**
+   * First phase: SonarQube redirects browser to OpenID connect provider's
+   * authentication form, requesting the minimal access rights ("scope") to get
+   * user profile.
+   */
+  @Test
+  public void redirect_browser_to_oidc_authentication_form() throws Exception {
+    DumbInitContext context = new DumbInitContext("the-csrf-state");
+    underTest.init(context);
+    assertThat(context.redirectedTo).startsWith(idp.url("protocol/openid-connect/auth").toString())
+        .contains("scope=" + encode("openid email profile", StandardCharsets.UTF_8.name()));
+  }
 
-	/**
-	 * Second phase: OpenID connect provider redirects browser to SonarQube at
-	 * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
-	 * access / ID token request to the OpenID connect provider.
-	 */
-	@Test
-	public void callback_on_successful_authentication() throws IOException, InterruptedException {
-		idp.enqueue(newSuccessfulAccessTokenResponse());
-		HttpServletRequest request = newAuthenticationRequest();
-		DumbCallbackContext callbackContext = new DumbCallbackContext(request);
-		underTest.callback(callbackContext);
+  /**
+   * Second phase: OpenID connect provider redirects browser to SonarQube at
+   * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
+   * access / ID token request to the OpenID connect provider.
+   */
+  @Test
+  public void callback_on_successful_authentication() throws IOException, InterruptedException {
+    idp.enqueue(newSuccessfulAccessTokenResponse());
+    HttpServletRequest request = newAuthenticationRequest();
+    DumbCallbackContext callbackContext = new DumbCallbackContext(request);
+    underTest.callback(callbackContext);
 
-		// contrary to GitHub, Bitbucket does not support verification of CSRF state
-		assertThat(callbackContext.csrfStateVerified.get()).isTrue();
-		// generate an unique login by default (suffixed by "@oidc"), instead of copying
-		// oidc login as-this.
-		assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
-		assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
-		assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
-		assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
+    // contrary to GitHub, Bitbucket does not support verification of CSRF state
+    assertThat(callbackContext.csrfStateVerified.get()).isTrue();
+    // generate an unique login by default (suffixed by "@oidc"), instead of copying
+    // oidc login as-this.
+    assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
+    assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
+    assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
+    assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
 
-		// verify the requests sent to OpenID Connect provider
-		RecordedRequest accessTokenRequest = idp.takeRequest();
-		assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
-	}
+    // verify the requests sent to OpenID Connect provider
+    RecordedRequest accessTokenRequest = idp.takeRequest();
+    assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
+  }
 
-	@Test
-	public void callback_throws_ISE_if_error_when_requesting_id_token() throws InterruptedException {
-		idp.enqueue(new MockResponse().addHeader("Content-Type", CommonContentTypes.APPLICATION_JSON).setResponseCode(500)
-		    .setBody("{\"error\":\"invalid_grant\",\"error_description\":\"Invalid resource owner credentials\"}"));
-		DumbCallbackContext callbackContext = new DumbCallbackContext(newAuthenticationRequest());
+  @Test
+  public void callback_throws_ISE_if_error_when_requesting_id_token() throws InterruptedException {
+    idp.enqueue(new MockResponse().addHeader("Content-Type", CommonContentTypes.APPLICATION_JSON).setResponseCode(500)
+        .setBody("{\"error\":\"invalid_grant\",\"error_description\":\"Invalid resource owner credentials\"}"));
+    DumbCallbackContext callbackContext = new DumbCallbackContext(newAuthenticationRequest());
 
-		try {
-			underTest.callback(callbackContext);
-			failBecauseExceptionWasNotThrown(IllegalStateException.class);
-		} catch (IllegalStateException e) {
-			assertEquals("Token request failed: {\"error_description\":\"Invalid resource owner credentials\","
-			    + "\"error\":\"invalid_grant\"}", e.getMessage());
-		}
-		assertThat(callbackContext.csrfStateVerified.get()).isTrue();
-		assertThat(callbackContext.userIdentity).isNull();
-		assertThat(callbackContext.redirectedToRequestedPage.get()).isFalse();
+    try {
+      underTest.callback(callbackContext);
+      failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException e) {
+      assertEquals("Token request failed: {\"error_description\":\"Invalid resource owner credentials\","
+          + "\"error\":\"invalid_grant\"}", e.getMessage());
+    }
+    assertThat(callbackContext.csrfStateVerified.get()).isTrue();
+    assertThat(callbackContext.userIdentity).isNull();
+    assertThat(callbackContext.redirectedToRequestedPage.get()).isFalse();
 
-		// verify the requests sent to OpenID Connect provider
-		RecordedRequest accessTokenRequest = idp.takeRequest();
-		assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
-	}
+    // verify the requests sent to OpenID Connect provider
+    RecordedRequest accessTokenRequest = idp.takeRequest();
+    assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
+  }
 
-	private static HttpServletRequest newAuthenticationRequest() {
-		HttpServletRequest request = mock(HttpServletRequest.class);
-		when(request.getMethod()).thenReturn("GET");
-		when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
-		when(request.getQueryString()).thenReturn("state=" + STATE + "&code=" + VALID_CODE);
-		return request;
-	}
+  private static HttpServletRequest newAuthenticationRequest() {
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getMethod()).thenReturn("GET");
+    when(request.getHeaderNames()).thenReturn(Collections.emptyEnumeration());
+    when(request.getQueryString()).thenReturn("state=" + STATE + "&code=" + VALID_CODE);
+    return request;
+  }
 
-	private static MockResponse newSuccessfulAccessTokenResponse() {
-		return new MockResponse().setHeader("content-type", "application/json").setBody(
-		    "{\"access_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIzMWNkOWM3YS05YTM3LTRiOTktOTViMC1jNzJlNGYzNGY4ODEiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uYXJxdWJlIiwiYXV0aF90aW1lIjoxNTE0MzA2NzU0LCJzZXNzaW9uX3N0YXRlIjoiYWE2N2NjNjktN2EwNi00N2QxLWJhMDAtNjk2NDZlNjBiOGJlIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODIvIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sIm5hbWUiOiJKb2huIERvbyIsInByZWZlcnJlZF91c2VybmFtZSI6ImpvaG4uZG9vIiwiZ2l2ZW5fbmFtZSI6IkpvaG4iLCJmYW1pbHlfbmFtZSI6IkRvbyIsImVtYWlsIjoiam9obi5kb29AYWNtZS5jb20ifQ.YElE-QodhPc8cUGo3jhT-phkmS3k_fHHDXhVm54m4wIZKDFeOnJD0spYkcODrIrOc04ibbinKJERtiBRxBF0P4RQq7NY08rgxFqt1STNrDb9tr4N_qEDXQ_66OUJKQIMd1L5yB5dzj73XAR1LRkhZSfVmDEGyE6A0x5rxgAeWCXUqMWOOq8Vq0ksdXiXeSdyg2n1XWU2j-uf6GB6mMtLXA0NddzQMOxPyhAKCGJRDJTwwb0fXzPeOVOvXO918rahsJ4iFn7wDnV2vaFBu37SNID7Iqmx3D_ptS2QrCdItg6nnK589BpcQMamTHINIQbkF-7LQH-U_yVJyEkOVrPzoQ\","
-		        + "\"refresh_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiI3NzJkZTg1ZS1jNjcxLTQ0NDgtYTAwYS04ZjVkZTRkOWNlZTYiLCJleHAiOjE1MTQzMDg1NTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiUmVmcmVzaCIsImF6cCI6InNvbmFycXViZSIsImF1dGhfdGltZSI6MCwic2Vzc2lvbl9zdGF0ZSI6ImFhNjdjYzY5LTdhMDYtNDdkMS1iYTAwLTY5NjQ2ZTYwYjhiZSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX19.Sqg5bqxEkpcg6r66fPW1X-RZvOMeKxHLl4Xk7S4BzGMiDNE8FlkbxW0JWUEm35oI3D0TVYv0B_MSFVc6mENBQeW3boJAtKUUCQy2FYKU4jta3KF-WLwKoTeU22ry-ZhRuJlydK-t0U3tB2ldWXTTfVI1qjHADIFt2RSggwhpU4iwZJiihxhk2KbVngClrNJ6Bk2olM276gopKzz9GN3erLXHZRtnzS3ZpyPvFzCoatP8v-FItAk01izToLbjyCjjicCBZfiMCw1_T0Zc1yz7l2kS0AE2kRBSDo58NggVL8yyXPhaLibigxYcIdawl9FpE3w5aiEquCH5WuQv5tt6LA\","
-		        + "\"scope\":\"\","
-		        + "\"id_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIwYzdkNDQ0Yy1iM2MxLTQzM2YtODQ1OC1iYzRlYmQ4YjM4MGIiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiSUQiLCJhenAiOiJzb25hcnF1YmUiLCJhdXRoX3RpbWUiOjE1MTQzMDY3NTQsInNlc3Npb25fc3RhdGUiOiJhYTY3Y2M2OS03YTA2LTQ3ZDEtYmEwMC02OTY0NmU2MGI4YmUiLCJhY3IiOiIxIiwibmFtZSI6IkpvaG4gRG9vIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiam9obi5kb28iLCJnaXZlbl9uYW1lIjoiSm9obiIsImZhbWlseV9uYW1lIjoiRG9vIiwiZW1haWwiOiJqb2huLmRvb0BhY21lLmNvbSJ9.UwqM6TGPrpMpK70FKxX9ZQWyUySjx7fxeV5IAT2PtzTH4xZKLJQbQmb4uD9z7o5azK5fgYc9xQfJKQX2y2euz-mtSdjueqkPAY-djQEc2kyvb-4Nd9Qc4Uiy19aAuooNdM-pAiYhfvyQQiGMRe3z68sq45mgfDpKMBcV-5bOJNafQ8tLLEonzT37-1GMfuAMv7ppx4HmdUDQccZ0D4nBqmeFRPcA3BghPZJ6eThR_mRsuYW1yZDg5tMle2cZe80mnIZSTW349cPwJFfmQDNT7XQBHHTCa6pYsBoqs2KYadOnbMSPCXZ-agd0DzffgtujsBvrUWV8tXSZ7axY34xMQQ\","
-		        + "\"token_type\":\"Bearer\",\"expires_in\":300}");
-	}
+  private static MockResponse newSuccessfulAccessTokenResponse() {
+    return new MockResponse().setHeader("content-type", "application/json").setBody(
+        "{\"access_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIzMWNkOWM3YS05YTM3LTRiOTktOTViMC1jNzJlNGYzNGY4ODEiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uYXJxdWJlIiwiYXV0aF90aW1lIjoxNTE0MzA2NzU0LCJzZXNzaW9uX3N0YXRlIjoiYWE2N2NjNjktN2EwNi00N2QxLWJhMDAtNjk2NDZlNjBiOGJlIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODIvIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sIm5hbWUiOiJKb2huIERvbyIsInByZWZlcnJlZF91c2VybmFtZSI6ImpvaG4uZG9vIiwiZ2l2ZW5fbmFtZSI6IkpvaG4iLCJmYW1pbHlfbmFtZSI6IkRvbyIsImVtYWlsIjoiam9obi5kb29AYWNtZS5jb20ifQ.YElE-QodhPc8cUGo3jhT-phkmS3k_fHHDXhVm54m4wIZKDFeOnJD0spYkcODrIrOc04ibbinKJERtiBRxBF0P4RQq7NY08rgxFqt1STNrDb9tr4N_qEDXQ_66OUJKQIMd1L5yB5dzj73XAR1LRkhZSfVmDEGyE6A0x5rxgAeWCXUqMWOOq8Vq0ksdXiXeSdyg2n1XWU2j-uf6GB6mMtLXA0NddzQMOxPyhAKCGJRDJTwwb0fXzPeOVOvXO918rahsJ4iFn7wDnV2vaFBu37SNID7Iqmx3D_ptS2QrCdItg6nnK589BpcQMamTHINIQbkF-7LQH-U_yVJyEkOVrPzoQ\","
+            + "\"refresh_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiI3NzJkZTg1ZS1jNjcxLTQ0NDgtYTAwYS04ZjVkZTRkOWNlZTYiLCJleHAiOjE1MTQzMDg1NTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiUmVmcmVzaCIsImF6cCI6InNvbmFycXViZSIsImF1dGhfdGltZSI6MCwic2Vzc2lvbl9zdGF0ZSI6ImFhNjdjYzY5LTdhMDYtNDdkMS1iYTAwLTY5NjQ2ZTYwYjhiZSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX19.Sqg5bqxEkpcg6r66fPW1X-RZvOMeKxHLl4Xk7S4BzGMiDNE8FlkbxW0JWUEm35oI3D0TVYv0B_MSFVc6mENBQeW3boJAtKUUCQy2FYKU4jta3KF-WLwKoTeU22ry-ZhRuJlydK-t0U3tB2ldWXTTfVI1qjHADIFt2RSggwhpU4iwZJiihxhk2KbVngClrNJ6Bk2olM276gopKzz9GN3erLXHZRtnzS3ZpyPvFzCoatP8v-FItAk01izToLbjyCjjicCBZfiMCw1_T0Zc1yz7l2kS0AE2kRBSDo58NggVL8yyXPhaLibigxYcIdawl9FpE3w5aiEquCH5WuQv5tt6LA\","
+            + "\"scope\":\"\","
+            + "\"id_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIwYzdkNDQ0Yy1iM2MxLTQzM2YtODQ1OC1iYzRlYmQ4YjM4MGIiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiSUQiLCJhenAiOiJzb25hcnF1YmUiLCJhdXRoX3RpbWUiOjE1MTQzMDY3NTQsInNlc3Npb25fc3RhdGUiOiJhYTY3Y2M2OS03YTA2LTQ3ZDEtYmEwMC02OTY0NmU2MGI4YmUiLCJhY3IiOiIxIiwibmFtZSI6IkpvaG4gRG9vIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiam9obi5kb28iLCJnaXZlbl9uYW1lIjoiSm9obiIsImZhbWlseV9uYW1lIjoiRG9vIiwiZW1haWwiOiJqb2huLmRvb0BhY21lLmNvbSJ9.UwqM6TGPrpMpK70FKxX9ZQWyUySjx7fxeV5IAT2PtzTH4xZKLJQbQmb4uD9z7o5azK5fgYc9xQfJKQX2y2euz-mtSdjueqkPAY-djQEc2kyvb-4Nd9Qc4Uiy19aAuooNdM-pAiYhfvyQQiGMRe3z68sq45mgfDpKMBcV-5bOJNafQ8tLLEonzT37-1GMfuAMv7ppx4HmdUDQccZ0D4nBqmeFRPcA3BghPZJ6eThR_mRsuYW1yZDg5tMle2cZe80mnIZSTW349cPwJFfmQDNT7XQBHHTCa6pYsBoqs2KYadOnbMSPCXZ-agd0DzffgtujsBvrUWV8tXSZ7axY34xMQQ\","
+            + "\"token_type\":\"Bearer\",\"expires_in\":300}");
+  }
 
-	private static class DumbCallbackContext implements OAuth2IdentityProvider.CallbackContext {
-		final HttpServletRequest request;
-		final AtomicBoolean csrfStateVerified = new AtomicBoolean(false);
-		final AtomicBoolean redirectedToRequestedPage = new AtomicBoolean(false);
-		UserIdentity userIdentity = null;
+  private static class DumbCallbackContext implements OAuth2IdentityProvider.CallbackContext {
+    final HttpServletRequest request;
+    final AtomicBoolean csrfStateVerified = new AtomicBoolean(false);
+    final AtomicBoolean redirectedToRequestedPage = new AtomicBoolean(false);
+    UserIdentity userIdentity = null;
 
-		public DumbCallbackContext(HttpServletRequest request) {
-			this.request = request;
-		}
+    public DumbCallbackContext(HttpServletRequest request) {
+      this.request = request;
+    }
 
-		@Override
-		public void verifyCsrfState() {
-			this.csrfStateVerified.set(true);
-		}
+    @Override
+    public void verifyCsrfState() {
+      this.csrfStateVerified.set(true);
+    }
 
-		@Override
-		public void redirectToRequestedPage() {
-			redirectedToRequestedPage.set(true);
-		}
+    @Override
+    public void redirectToRequestedPage() {
+      redirectedToRequestedPage.set(true);
+    }
 
-		@Override
-		public void authenticate(UserIdentity userIdentity) {
-			this.userIdentity = userIdentity;
-		}
+    @Override
+    public void authenticate(UserIdentity userIdentity) {
+      this.userIdentity = userIdentity;
+    }
 
-		@Override
-		public String getCallbackUrl() {
-			return CALLBACK_URL;
-		}
+    @Override
+    public String getCallbackUrl() {
+      return CALLBACK_URL;
+    }
 
-		@Override
-		public HttpServletRequest getRequest() {
-			return request;
-		}
+    @Override
+    public HttpServletRequest getRequest() {
+      return request;
+    }
 
-		@Override
-		public HttpServletResponse getResponse() {
-			throw new UnsupportedOperationException("not used");
-		}
-	}
+    @Override
+    public HttpServletResponse getResponse() {
+      throw new UnsupportedOperationException("not used");
+    }
+  }
 
-	private static class DumbInitContext implements OAuth2IdentityProvider.InitContext {
-		String redirectedTo = null;
-		private final String generatedCsrfState;
+  private static class DumbInitContext implements OAuth2IdentityProvider.InitContext {
+    String redirectedTo = null;
+    private final String generatedCsrfState;
 
-		public DumbInitContext(String generatedCsrfState) {
-			this.generatedCsrfState = generatedCsrfState;
-		}
+    public DumbInitContext(String generatedCsrfState) {
+      this.generatedCsrfState = generatedCsrfState;
+    }
 
-		@Override
-		public String generateCsrfState() {
-			return generatedCsrfState;
-		}
+    @Override
+    public String generateCsrfState() {
+      return generatedCsrfState;
+    }
 
-		@Override
-		public void redirectTo(String url) {
-			this.redirectedTo = url;
-		}
+    @Override
+    public void redirectTo(String url) {
+      this.redirectedTo = url;
+    }
 
-		@Override
-		public String getCallbackUrl() {
-			return CALLBACK_URL;
-		}
+    @Override
+    public String getCallbackUrl() {
+      return CALLBACK_URL;
+    }
 
-		@Override
-		public HttpServletRequest getRequest() {
-			return null;
-		}
+    @Override
+    public HttpServletRequest getRequest() {
+      return null;
+    }
 
-		@Override
-		public HttpServletResponse getResponse() {
-			return null;
-		}
+    @Override
+    public HttpServletResponse getResponse() {
+      return null;
+    }
 
-	}
+  }
 
 }

@@ -31,69 +31,69 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 @ServerSide
 public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
-	private static final Logger LOGGER = Loggers.get(OidcIdentityProvider.class);
-	public static final String KEY = "oidc";
+  private static final Logger LOGGER = Loggers.get(OidcIdentityProvider.class);
+  public static final String KEY = "oidc";
 
-	private final OidcSettings settings;
-	private final OidcClient client;
-	private final UserIdentityFactory userIdentityFactory;
+  private final OidcSettings settings;
+  private final OidcClient client;
+  private final UserIdentityFactory userIdentityFactory;
 
-	public OidcIdentityProvider(OidcSettings settings, OidcClient client, UserIdentityFactory userIdentityFactory) {
-		this.settings = settings;
-		this.client = client;
-		this.userIdentityFactory = userIdentityFactory;
-	}
+  public OidcIdentityProvider(OidcSettings settings, OidcClient client, UserIdentityFactory userIdentityFactory) {
+    this.settings = settings;
+    this.client = client;
+    this.userIdentityFactory = userIdentityFactory;
+  }
 
-	@Override
-	public String getKey() {
-		return KEY;
-	}
+  @Override
+  public String getKey() {
+    return KEY;
+  }
 
-	@Override
-	public String getName() {
-		return "OpenID Connect";
-	}
+  @Override
+  public String getName() {
+    return "OpenID Connect";
+  }
 
-	@Override
-	public Display getDisplay() {
-		return Display.builder()
-		    // URL of src/main/resources/static/openid.svg at runtime
-		    .setIconPath("/static/authoidc/openid.svg").build();
-	}
+  @Override
+  public Display getDisplay() {
+    return Display.builder()
+        // URL of src/main/resources/static/openid.svg at runtime
+        .setIconPath("/static/authoidc/openid.svg").build();
+  }
 
-	@Override
-	public boolean isEnabled() {
-		return settings.isEnabled();
-	}
+  @Override
+  public boolean isEnabled() {
+    return settings.isEnabled();
+  }
 
-	@Override
-	public boolean allowsUsersToSignUp() {
-		return settings.allowUsersToSignUp();
-	}
+  @Override
+  public boolean allowsUsersToSignUp() {
+    return settings.allowUsersToSignUp();
+  }
 
-	@Override
-	public void init(InitContext context) {
-		LOGGER.trace("Starting authentication workflow");
-		if (!isEnabled()) {
-			throw new IllegalStateException("OpenID Connect authentication is disabled");
-		}
-		String state = context.generateCsrfState();
-		AuthenticationRequest authenticationRequest = client.getAuthenticationRequest(context.getCallbackUrl(), state);
-		LOGGER.trace("Redirecting to authentication endpoint");
-		context.redirectTo(authenticationRequest.toURI().toString());
-	}
+  @Override
+  public void init(InitContext context) {
+    LOGGER.trace("Starting authentication workflow");
+    if (!isEnabled()) {
+      throw new IllegalStateException("OpenID Connect authentication is disabled");
+    }
+    String state = context.generateCsrfState();
+    AuthenticationRequest authenticationRequest = client.getAuthenticationRequest(context.getCallbackUrl(), state);
+    LOGGER.trace("Redirecting to authentication endpoint");
+    context.redirectTo(authenticationRequest.toURI().toString());
+  }
 
-	@Override
-	public void callback(CallbackContext context) {
-		LOGGER.trace("Handling authentication response");
-		context.verifyCsrfState();
-		AuthorizationCode authorizationCode = client.getAuthorizationCode(context.getRequest());
-		UserInfo userInfo = client.getUserInfo(authorizationCode, context.getCallbackUrl());
-		UserIdentity userIdentity = userIdentityFactory.create(userInfo);
-		LOGGER.debug("Authenticating user '{}' with groups {}", userIdentity.getLogin(), userIdentity.getGroups());
-		context.authenticate(userIdentity);
-		LOGGER.trace("Redirecting to requested page");
-		context.redirectToRequestedPage();
-	}
+  @Override
+  public void callback(CallbackContext context) {
+    LOGGER.trace("Handling authentication response");
+    context.verifyCsrfState();
+    AuthorizationCode authorizationCode = client.getAuthorizationCode(context.getRequest());
+    UserInfo userInfo = client.getUserInfo(authorizationCode, context.getCallbackUrl());
+    UserIdentity userIdentity = userIdentityFactory.create(userInfo);
+    LOGGER.debug("Authenticating user '{}' with groups {}", userIdentity.getLogin(), userIdentity.getGroups());
+    context.authenticate(userIdentity);
+    LOGGER.trace("Redirecting to requested page");
+    context.redirectToRequestedPage();
+  }
 
 }

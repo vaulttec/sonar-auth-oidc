@@ -26,22 +26,22 @@ import org.vaulttec.sonarqube.auth.oidc.AuthOidcPlugin;
 
 public class AuthOidcPluginTest {
 
-	MockContext context = new MockContext();
+  MockContext context = new MockContext();
 
-	AuthOidcPlugin underTest = new AuthOidcPlugin();
+  AuthOidcPlugin underTest = new AuthOidcPlugin();
 
-	@Test
-	@SuppressWarnings("unchecked")
-	public void test_extensions() throws Exception {
-		underTest.define(context);
+  @Test
+  @SuppressWarnings("unchecked")
+  public void test_extensions() throws Exception {
+    underTest.define(context);
 
-		assertThat(context.getExtensions()).hasSize(11);
-	}
+    assertThat(context.getExtensions()).hasSize(11);
+  }
 
-	private static class MockContext extends Plugin.Context {
-		MockContext() {
-			super(Version.create(5, 6));
-		}
-	}
+  private static class MockContext extends Plugin.Context {
+    MockContext() {
+      super(Version.create(5, 6));
+    }
+  }
 
 }

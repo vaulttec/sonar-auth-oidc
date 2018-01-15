@@ -21,10 +21,10 @@ import org.sonar.api.Plugin;
 
 public class AuthOidcPlugin implements Plugin {
 
-	@Override
-	public void define(Context context) {
-		context.addExtensions(OidcSettings.class, OidcClient.class, OidcIdentityProvider.class, UserIdentityFactory.class);
-		context.addExtensions(OidcSettings.definitions());
-	}
+  @Override
+  public void define(Context context) {
+    context.addExtensions(OidcSettings.class, OidcClient.class, OidcIdentityProvider.class, UserIdentityFactory.class);
+    context.addExtensions(OidcSettings.definitions());
+  }
 
 }

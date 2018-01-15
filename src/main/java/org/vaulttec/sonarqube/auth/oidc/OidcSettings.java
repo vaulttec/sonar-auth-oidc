@@ -37,93 +37,93 @@ import org.sonar.api.server.ServerSide;
 @ServerSide
 public class OidcSettings {
 
-	private static final String ENABLED = "sonar.auth.oidc.enabled";
-	private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
-	private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
-	private static final String PROVIDER_CONFIGURATION = "sonar.auth.oidc.providerConfiguration";
-	private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
-	private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
+  private static final String ENABLED = "sonar.auth.oidc.enabled";
+  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
+  private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
+  private static final String PROVIDER_CONFIGURATION = "sonar.auth.oidc.providerConfiguration";
+  private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
+  private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
 
-	static final String LOGIN_STRATEGY = "sonar.auth.oidc.loginStrategy";
-	static final String LOGIN_STRATEGY_UNIQUE = "Unique";
-	static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
-	static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
-	static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
+  static final String LOGIN_STRATEGY = "sonar.auth.oidc.loginStrategy";
+  static final String LOGIN_STRATEGY_UNIQUE = "Unique";
+  static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
+  static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
+  static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
-	private static final String CATEGORY = CATEGORY_SECURITY;
-	private static final String SUBCATEGORY = "oidc";
+  private static final String CATEGORY = CATEGORY_SECURITY;
+  private static final String SUBCATEGORY = "oidc";
 
-	private final Settings settings;
+  private final Settings settings;
 
-	public OidcSettings(Settings settings) {
-		this.settings = settings;
-	}
+  public OidcSettings(Settings settings) {
+    this.settings = settings;
+  }
 
-	public boolean isEnabled() {
-		return settings.getBoolean(ENABLED) && providerConfiguration() != null && clientId() != null;
-	}
+  public boolean isEnabled() {
+    return settings.getBoolean(ENABLED) && providerConfiguration() != null && clientId() != null;
+  }
 
-	@CheckForNull
-	public String providerConfiguration() {
-		return settings.getString(PROVIDER_CONFIGURATION);
-	}
+  @CheckForNull
+  public String providerConfiguration() {
+    return settings.getString(PROVIDER_CONFIGURATION);
+  }
 
-	@CheckForNull
-	public String clientId() {
-		return settings.getString(CLIENT_ID);
-	}
+  @CheckForNull
+  public String clientId() {
+    return settings.getString(CLIENT_ID);
+  }
 
-	public String clientSecret() {
-		return settings.getString(CLIENT_SECRET);
-	}
+  public String clientSecret() {
+    return settings.getString(CLIENT_SECRET);
+  }
 
-	public boolean allowUsersToSignUp() {
-		return settings.getBoolean(ALLOW_USERS_TO_SIGN_UP);
-	}
+  public boolean allowUsersToSignUp() {
+    return settings.getBoolean(ALLOW_USERS_TO_SIGN_UP);
+  }
 
-	public String loginStrategy() {
-		return settings.getString(LOGIN_STRATEGY);
-	}
+  public String loginStrategy() {
+    return settings.getString(LOGIN_STRATEGY);
+  }
 
-	public boolean syncGroups() {
-		return settings.getBoolean(GROUPS_SYNC);
-	}
+  public boolean syncGroups() {
+    return settings.getBoolean(GROUPS_SYNC);
+  }
 
-	public static List<PropertyDefinition> definitions() {
-		int index = 1;
-		return Arrays.asList(
-		    PropertyDefinition.builder(ENABLED).name("Enabled")
-		        .description(
-		            "Enable OpenID Connect users to login. Value is ignored if client ID and secret are not defined.")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
-		        .build(),
-		    PropertyDefinition.builder(PROVIDER_CONFIGURATION).name("OpenID Connect Provider configuration")
-		        .description("The endpoint configuration of an OpenID Connect provider."
-		            + " This metadata is retrived from the provider in JSON format via the path \"/.well-known/openid-configuration\".")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(TEXT).index(index++).build(),
-		    PropertyDefinition.builder(CLIENT_ID).name("Client ID").description("The ID of an OpenID Connect Client.")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
-		    PropertyDefinition.builder(CLIENT_SECRET).name("Client secret")
-		        .description("The shared secret of a non-public client. "
-		            + "This is only needed for an OpenID Connect client with access type \"confidential\".")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
-		    PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up").description(
-		        "Allow new users to authenticate. When set to 'false', only existing users will be able to authenticate to the server.")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
-		        .build(),
-		    PropertyDefinition.builder(LOGIN_STRATEGY).name("Login generation strategy").description(format(
-		        "When the login strategy is set to '%s', the user's login will be auto-generated the first time so that it is unique."
-		            + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
-		            + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name.",
-		        LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
-		        .subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST).defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
-		        .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)
-		        .index(index++).build(),
-		    PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
-		        .description("For each of his Open ID Connect userinfo 'groups' claim entries,"
-		            + " the user will be associated to a group with the same name (if it exists) in SonarQube.")
-		        .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
-		        .build());
-	}
+  public static List<PropertyDefinition> definitions() {
+    int index = 1;
+    return Arrays.asList(
+        PropertyDefinition.builder(ENABLED).name("Enabled")
+            .description(
+                "Enable OpenID Connect users to login. Value is ignored if client ID and secret are not defined.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
+            .build(),
+        PropertyDefinition.builder(PROVIDER_CONFIGURATION).name("OpenID Connect Provider configuration")
+            .description("The endpoint configuration of an OpenID Connect provider."
+                + " This metadata is retrived from the provider in JSON format via the path \"/.well-known/openid-configuration\".")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(TEXT).index(index++).build(),
+        PropertyDefinition.builder(CLIENT_ID).name("Client ID").description("The ID of an OpenID Connect Client.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+        PropertyDefinition.builder(CLIENT_SECRET).name("Client secret")
+            .description("The shared secret of a non-public client. "
+                + "This is only needed for an OpenID Connect client with access type \"confidential\".")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+        PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up").description(
+            "Allow new users to authenticate. When set to 'false', only existing users will be able to authenticate to the server.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
+            .build(),
+        PropertyDefinition.builder(LOGIN_STRATEGY).name("Login generation strategy").description(format(
+            "When the login strategy is set to '%s', the user's login will be auto-generated the first time so that it is unique."
+                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
+                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name.",
+            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
+            .subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST).defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
+            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)
+            .index(index++).build(),
+        PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
+            .description("For each of his Open ID Connect userinfo 'groups' claim entries,"
+                + " the user will be associated to a group with the same name (if it exists) in SonarQube.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
+            .build());
+  }
 
 }

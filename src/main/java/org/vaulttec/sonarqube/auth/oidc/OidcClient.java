@@ -53,137 +53,135 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 @ServerSide
 public class OidcClient {
 
-	private static final Logger LOGGER = Loggers.get(OidcClient.class);
+  private static final Logger LOGGER = Loggers.get(OidcClient.class);
 
-	private static final ResponseType RESPONSE_TYPE = new ResponseType(Value.CODE);
-	private static final Scope SCOPE = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
+  private static final ResponseType RESPONSE_TYPE = new ResponseType(Value.CODE);
+  private static final Scope SCOPE = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
 
-	private final OidcSettings settings;
+  private final OidcSettings settings;
 
-	public OidcClient(OidcSettings settings) {
-		this.settings = settings;
-	}
+  public OidcClient(OidcSettings settings) {
+    this.settings = settings;
+  }
 
-	public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
-		AuthenticationRequest request;
-		try {
-			Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, SCOPE, getClientId(), new URI(callbackUrl));
-			request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
-			    .build();
-		} catch (URISyntaxException e) {
-			throw new IllegalStateException("Creating new authentication request failed", e);
-		}
-		LOGGER.debug("Authentication request URI: {}", request.toURI());
-		return request;
-	}
+  public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
+    AuthenticationRequest request;
+    try {
+      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, SCOPE, getClientId(), new URI(callbackUrl));
+      request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
+          .build();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException("Creating new authentication request failed", e);
+    }
+    LOGGER.debug("Authentication request URI: {}", request.toURI());
+    return request;
+  }
 
-	public AuthorizationCode getAuthorizationCode(HttpServletRequest callbackRequest) {
-		LOGGER.debug("Retrieving authorization code from callback request's query parameters: {}",
-		    callbackRequest.getQueryString());
-		AuthenticationResponse authResponse = null;
-		try {
-			HTTPRequest request = ServletUtils.createHTTPRequest(callbackRequest);
-			authResponse = AuthenticationResponseParser.parse(request.getURL().toURI(), request.getQueryParameters());
-		} catch (ParseException | URISyntaxException | IOException e) {
-			throw new IllegalStateException("Error while parsing callback request", e);
-		}
-		if (authResponse instanceof AuthenticationErrorResponse) {
-			ErrorObject error = ((AuthenticationErrorResponse) authResponse).getErrorObject();
-			throw new IllegalStateException("Authentication request failed: " + error.toJSONObject());
-		}
-		AuthorizationCode authorizationCode = ((AuthenticationSuccessResponse) authResponse).getAuthorizationCode();
-		LOGGER.debug("Authorization code: {}", authorizationCode.getValue());
-		return authorizationCode;
-	}
+  public AuthorizationCode getAuthorizationCode(HttpServletRequest callbackRequest) {
+    LOGGER.debug("Retrieving authorization code from callback request's query parameters: {}",
+        callbackRequest.getQueryString());
+    AuthenticationResponse authResponse = null;
+    try {
+      HTTPRequest request = ServletUtils.createHTTPRequest(callbackRequest);
+      authResponse = AuthenticationResponseParser.parse(request.getURL().toURI(), request.getQueryParameters());
+    } catch (ParseException | URISyntaxException | IOException e) {
+      throw new IllegalStateException("Error while parsing callback request", e);
+    }
+    if (authResponse instanceof AuthenticationErrorResponse) {
+      ErrorObject error = ((AuthenticationErrorResponse) authResponse).getErrorObject();
+      throw new IllegalStateException("Authentication request failed: " + error.toJSONObject());
+    }
+    AuthorizationCode authorizationCode = ((AuthenticationSuccessResponse) authResponse).getAuthorizationCode();
+    LOGGER.debug("Authorization code: {}", authorizationCode.getValue());
+    return authorizationCode;
+  }
 
-	public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
-		LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}",
-		    getProviderMetadata().getTokenEndpointURI());
-		TokenResponse tokenResponse = getTokenResponse(authorizationCode, callbackUrl);
-		if (tokenResponse instanceof TokenErrorResponse) {
-			ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
-			if (errorObject == null || errorObject.getCode() == null) {
-				throw new IllegalStateException("Token request failed: No error code returned "
-				    + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
-			} else {
-				throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
-			}
-		}
+  public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
+    LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}",
+        getProviderMetadata().getTokenEndpointURI());
+    TokenResponse tokenResponse = getTokenResponse(authorizationCode, callbackUrl);
+    if (tokenResponse instanceof TokenErrorResponse) {
+      ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
+      if (errorObject == null || errorObject.getCode() == null) {
+        throw new IllegalStateException("Token request failed: No error code returned "
+            + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
+      } else {
+        throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
+      }
+    }
 
-		UserInfo userInfo;
-		try {
-			userInfo = new UserInfo(((OIDCTokenResponse) tokenResponse).getOIDCTokens().getIDToken().getJWTClaimsSet());
-		} catch (java.text.ParseException e) {
-			throw new IllegalStateException("Parsing ID token failed", e);
-		}
+    UserInfo userInfo;
+    try {
+      userInfo = new UserInfo(((OIDCTokenResponse) tokenResponse).getOIDCTokens().getIDToken().getJWTClaimsSet());
+    } catch (java.text.ParseException e) {
+      throw new IllegalStateException("Parsing ID token failed", e);
+    }
 
-		if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
-			LOGGER.debug("Retrieving user info from {}",
-					getProviderMetadata().getUserInfoEndpointURI());
-			UserInfoResponse userInfoResponse = getUserInfoResponse(((OIDCTokenResponse) tokenResponse).getOIDCTokens().getBearerAccessToken());
-			if (userInfoResponse instanceof UserInfoErrorResponse) {
-				ErrorObject errorObject = ((UserInfoErrorResponse)userInfoResponse).getErrorObject();
-				if (errorObject == null || errorObject.getCode() == null) {
-					throw new IllegalStateException("UserInfo request failed: No error code returned "
-							+ "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
-				} else {
-					throw new IllegalStateException("UserInfo request failed: " + errorObject.toJSONObject());
-				}
-			}
-			userInfo = ((UserInfoSuccessResponse)userInfoResponse).getUserInfo();
-		}
+    if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
+      LOGGER.debug("Retrieving user info from {}", getProviderMetadata().getUserInfoEndpointURI());
+      UserInfoResponse userInfoResponse = getUserInfoResponse(
+          ((OIDCTokenResponse) tokenResponse).getOIDCTokens().getBearerAccessToken());
+      if (userInfoResponse instanceof UserInfoErrorResponse) {
+        ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
+        if (errorObject == null || errorObject.getCode() == null) {
+          throw new IllegalStateException("UserInfo request failed: No error code returned "
+              + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
+        } else {
+          throw new IllegalStateException("UserInfo request failed: " + errorObject.toJSONObject());
+        }
+      }
+      userInfo = ((UserInfoSuccessResponse) userInfoResponse).getUserInfo();
+    }
 
+    LOGGER.debug("User info: {}", userInfo.toJSONObject());
+    return userInfo;
+  }
 
-		LOGGER.debug("User info: {}", userInfo.toJSONObject());
-		return userInfo;
-	}
+  protected TokenResponse getTokenResponse(AuthorizationCode authorizationCode, String callbackUrl) {
+    TokenResponse tokenResponse;
+    try {
+      TokenRequest request = new TokenRequest(getProviderMetadata().getTokenEndpointURI(),
+          new ClientSecretBasic(getClientId(), getClientSecret()),
+          new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
+      HTTPResponse response = request.toHTTPRequest().send();
+      LOGGER.debug("Token response content: {}", response.getContent());
+      tokenResponse = OIDCTokenResponseParser.parse(response);
+    } catch (URISyntaxException | IOException | ParseException e) {
+      throw new IllegalStateException("Retrieving access token failed", e);
+    }
+    return tokenResponse;
+  }
 
-	protected TokenResponse getTokenResponse(AuthorizationCode authorizationCode, String callbackUrl) {
-		TokenResponse tokenResponse;
-		try {
-			TokenRequest request = new TokenRequest(getProviderMetadata().getTokenEndpointURI(),
-			    new ClientSecretBasic(getClientId(), getClientSecret()),
-			    new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
-			HTTPResponse response = request.toHTTPRequest().send();
-			LOGGER.debug("Token response content: {}", response.getContent());
-			tokenResponse = OIDCTokenResponseParser.parse(response);
-		} catch (URISyntaxException | IOException | ParseException e) {
-			throw new IllegalStateException("Retrieving access token failed", e);
-		}
-		return tokenResponse;
-	}
+  protected UserInfoResponse getUserInfoResponse(BearerAccessToken accessToken) {
+    UserInfoResponse userInfoResponse;
+    try {
+      UserInfoRequest request = new UserInfoRequest(getProviderMetadata().getUserInfoEndpointURI(), accessToken);
+      HTTPResponse response = request.toHTTPRequest().send();
+      LOGGER.debug("UserInfo response content: {}", response.getContent());
+      userInfoResponse = UserInfoResponse.parse(response);
+    } catch (IOException | ParseException e) {
+      throw new IllegalStateException("Retrieving user information failed", e);
+    }
+    return userInfoResponse;
+  }
 
-	protected UserInfoResponse getUserInfoResponse(BearerAccessToken accessToken) {
-		UserInfoResponse userInfoResponse;
-		try {
-			UserInfoRequest request = new UserInfoRequest(getProviderMetadata().getUserInfoEndpointURI(),
-					accessToken);
-			HTTPResponse response = request.toHTTPRequest().send();
-			LOGGER.debug("UserInfo response content: {}", response.getContent());
-			userInfoResponse = UserInfoResponse.parse(response);
-		} catch ( IOException | ParseException e) {
-			throw new IllegalStateException("Retrieving user information failed", e);
-		}
-		return userInfoResponse;
-	}
+  private OIDCProviderMetadata getProviderMetadata() {
+    OIDCProviderMetadata providerMetadata;
+    try {
+      providerMetadata = OIDCProviderMetadata.parse(settings.providerConfiguration());
+    } catch (ParseException e) {
+      throw new IllegalStateException("Invalid OpenID Connect provider configuration", e);
+    }
+    return providerMetadata;
+  }
 
-	private OIDCProviderMetadata getProviderMetadata() {
-		OIDCProviderMetadata providerMetadata;
-		try {
-			providerMetadata = OIDCProviderMetadata.parse(settings.providerConfiguration());
-		} catch (ParseException e) {
-			throw new IllegalStateException("Invalid OpenID Connect provider configuration", e);
-		}
-		return providerMetadata;
-	}
+  private ClientID getClientId() {
+    return new ClientID(settings.clientId());
+  }
 
-	private ClientID getClientId() {
-		return new ClientID(settings.clientId());
-	}
-
-	private Secret getClientSecret() {
-		String secret = settings.clientSecret();
-		return secret == null ? new Secret("") : new Secret(secret);
-	}
+  private Secret getClientSecret() {
+    String secret = settings.clientSecret();
+    return secret == null ? new Secret("") : new Secret(secret);
+  }
 
 }
