@@ -24,7 +24,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
 ## Installation
 
-1. Download the latest plugin from the [GitHub Releases](https://github.com/vaulttec/sonar-auth-oidc/releases) and put it into the `SONARQUBE_HOME/extensions/plugins/` directory
+1. Install the plugin from [SonarQube marketplace](https://docs.sonarqube.org/display/SONAR/Marketplace) via "Administration > Marketplace". Or download the plugin jar from [GitHub Releases](https://github.com/vaulttec/sonar-auth-oidc/releases) and put it into the `SONARQUBE_HOME/extensions/plugins/` directory
 1. Restart the SonarQube server
 
 ## Configuration
@@ -47,3 +47,4 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
 * SonarQube 6.7.1
 * Keycloak 3.4.2.Final
+* JetBrains Hub 2017.4
