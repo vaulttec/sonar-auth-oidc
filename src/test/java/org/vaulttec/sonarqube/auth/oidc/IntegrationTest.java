@@ -85,8 +85,33 @@ public class IntegrationTest extends AbstractOidcTest {
     DumbCallbackContext callbackContext = new DumbCallbackContext(request);
     underTest.callback(callbackContext);
 
-    // contrary to GitHub, Bitbucket does not support verification of CSRF state
-    assertThat(callbackContext.csrfStateVerified.get()).isTrue();
+    // generate an unique login by default (suffixed by "@oidc"), instead of copying
+    // oidc login as-this.
+    assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
+    assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
+    assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
+    assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
+
+    // verify the requests sent to OpenID Connect provider
+    RecordedRequest accessTokenRequest = idp.takeRequest();
+    assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
+  }
+
+  /**
+   * Second phase: OpenID connect provider redirects browser to SonarQube at
+   * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
+   * access / ID token request to the OpenID connect provider. Due to missing user
+   * profile information in the ID token an additional request is necessary.
+   */
+  @Test
+  public void callback_on_successful_authentication_with_additional_user_info_request()
+      throws IOException, InterruptedException {
+    idp.enqueue(newSuccessfulAccessTokenResponseWithoutUserInfo());
+    idp.enqueue(newUserInfoResponse());
+    HttpServletRequest request = newAuthenticationRequest();
+    DumbCallbackContext callbackContext = new DumbCallbackContext(request);
+    underTest.callback(callbackContext);
+
     // generate an unique login by default (suffixed by "@oidc"), instead of copying
     // oidc login as-this.
     assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
@@ -136,6 +161,21 @@ public class IntegrationTest extends AbstractOidcTest {
             + "\"scope\":\"\","
             + "\"id_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIwYzdkNDQ0Yy1iM2MxLTQzM2YtODQ1OC1iYzRlYmQ4YjM4MGIiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiSUQiLCJhenAiOiJzb25hcnF1YmUiLCJhdXRoX3RpbWUiOjE1MTQzMDY3NTQsInNlc3Npb25fc3RhdGUiOiJhYTY3Y2M2OS03YTA2LTQ3ZDEtYmEwMC02OTY0NmU2MGI4YmUiLCJhY3IiOiIxIiwibmFtZSI6IkpvaG4gRG9vIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiam9obi5kb28iLCJnaXZlbl9uYW1lIjoiSm9obiIsImZhbWlseV9uYW1lIjoiRG9vIiwiZW1haWwiOiJqb2huLmRvb0BhY21lLmNvbSJ9.UwqM6TGPrpMpK70FKxX9ZQWyUySjx7fxeV5IAT2PtzTH4xZKLJQbQmb4uD9z7o5azK5fgYc9xQfJKQX2y2euz-mtSdjueqkPAY-djQEc2kyvb-4Nd9Qc4Uiy19aAuooNdM-pAiYhfvyQQiGMRe3z68sq45mgfDpKMBcV-5bOJNafQ8tLLEonzT37-1GMfuAMv7ppx4HmdUDQccZ0D4nBqmeFRPcA3BghPZJ6eThR_mRsuYW1yZDg5tMle2cZe80mnIZSTW349cPwJFfmQDNT7XQBHHTCa6pYsBoqs2KYadOnbMSPCXZ-agd0DzffgtujsBvrUWV8tXSZ7axY34xMQQ\","
             + "\"token_type\":\"Bearer\",\"expires_in\":300}");
+  }
+
+  private static MockResponse newSuccessfulAccessTokenResponseWithoutUserInfo() {
+    return new MockResponse().setHeader("content-type", "application/json").setBody(
+        "{\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJzdWIiOiJlNjVjOTYwNy1mZDRlLTRiY2QtOTdiMS1jYTA1NzYxNjU5MGUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvaHViIiwiYXVkIjpbIjYwZGNhY2FmLThhOTQtNDE3Ny1iMmYyLTEzNDg0NjNmODhjZSJdLCJleHAiOjEuNTIzNTcyMTY3NTYxRTksImlhdCI6MS41MTU3OTYxNjc1OTdFOSwiYXV0aF90aW1lIjoxLjUxNTc5NjE2NzU2MUU5fQ.o_h3f6QK--p1Ru8pUquoLpvB1vdBCorUfdq_I8J_yBbjyPS4LUP9-e_xkXtql6yOSh9AewNUb7PSKnJOq-TlMMMlOr-Or676i1wT0hGQb2aKnzzFu7VYQOep8_6t-AQSXRhckaR5NIJnF6oxFWdTwhizcenO_Osf12R-PQOyQsA\","
+            + "\"access_token\":\"invalid\"," + "\"token_type\":\"Bearer\"," + "\"expires_in\":3600,"
+            + "\"scope\":\"0-0-0-0-0\"}");
+  }
+
+  private static MockResponse newUserInfoResponse() {
+    return new MockResponse().setHeader("content-type", "application/json")
+        .setBody("{\"sub\":\"e65c9607-fd4e-4bcd-97b1-ca057616590e\","
+            + "\"name\":\"John Doo\",\"preferred_username\":\"john.doo\","
+            + "\"profile\":\"http://localhost:8080/hub/users/e65c9607-fd4e-4bcd-97b1-ca057616590e\","
+            + "\"email\":\"john.doo@acme.com\",\"email_verified\":true}");
   }
 
   private static class DumbCallbackContext implements OAuth2IdentityProvider.CallbackContext {
