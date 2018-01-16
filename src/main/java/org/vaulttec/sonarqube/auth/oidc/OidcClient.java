@@ -23,8 +23,6 @@ import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.*;
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -34,11 +32,11 @@ import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
+import com.nimbusds.oauth2.sdk.ResponseType.Value;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.ResponseType.Value;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
@@ -46,9 +44,23 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest.Builder;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
+import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
+import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
+import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
+import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
+import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoRequest;
+import com.nimbusds.openid.connect.sdk.UserInfoResponse;
+import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 
 @ServerSide
 public class OidcClient {
@@ -110,17 +122,17 @@ public class OidcClient {
       }
     }
 
+    OIDCTokens oidcTokens = ((OIDCTokenResponse) tokenResponse).getOIDCTokens();
     UserInfo userInfo;
     try {
-      userInfo = new UserInfo(((OIDCTokenResponse) tokenResponse).getOIDCTokens().getIDToken().getJWTClaimsSet());
+      userInfo = new UserInfo(oidcTokens.getIDToken().getJWTClaimsSet());
     } catch (java.text.ParseException e) {
       throw new IllegalStateException("Parsing ID token failed", e);
     }
 
     if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
       LOGGER.debug("Retrieving user info from {}", getProviderMetadata().getUserInfoEndpointURI());
-      UserInfoResponse userInfoResponse = getUserInfoResponse(
-          ((OIDCTokenResponse) tokenResponse).getOIDCTokens().getBearerAccessToken());
+      UserInfoResponse userInfoResponse = getUserInfoResponse(oidcTokens.getBearerAccessToken());
       if (userInfoResponse instanceof UserInfoErrorResponse) {
         ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
         if (errorObject == null || errorObject.getCode() == null) {
