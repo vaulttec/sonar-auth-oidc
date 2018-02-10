@@ -76,7 +76,7 @@ public class UserIdentityFactory {
   }
 
   private Set<String> getGroups(UserInfo userInfo) {
-    List<String> groupsClaim = userInfo.getStringListClaim("groups");
+    List<String> groupsClaim = userInfo.getStringListClaim(settings.syncGroupsClaimName());
     return groupsClaim != null ? new HashSet<>(groupsClaim) : Collections.emptySet();
   }
 

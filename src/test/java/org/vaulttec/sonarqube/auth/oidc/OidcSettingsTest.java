@@ -111,8 +111,15 @@ public class OidcSettingsTest {
   }
 
   @Test
+  public void group_sync_claim_name() {
+    assertThat(underTest.syncGroupsClaimName()).isEqualTo("groups");
+    settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "test");
+    assertThat(underTest.syncGroupsClaimName()).isEqualTo("test");
+  }
+
+  @Test
   public void definitions() {
-    assertThat(OidcSettings.definitions()).hasSize(7);
+    assertThat(OidcSettings.definitions()).hasSize(8);
   }
 
   private String getProviderConfiguration() {

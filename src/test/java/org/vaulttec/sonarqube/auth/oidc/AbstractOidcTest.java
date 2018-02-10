@@ -42,12 +42,14 @@ public abstract class AbstractOidcTest {
 
   protected void setSettings(boolean enabled, String issuerUri) {
     if (enabled) {
+      settings.setProperty("sonar.auth.oidc.enabled", true);
       settings.setProperty("sonar.auth.oidc.providerConfiguration", getProviderConfiguration(issuerUri));
       settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
       settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
       settings.setProperty("sonar.auth.oidc.issuerUri", "http://localhost/auth/sso");
       settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
-      settings.setProperty("sonar.auth.oidc.enabled", true);
+      settings.setProperty("sonar.auth.oidc.groupsSync", true);
+      settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "myGroups");
     } else {
       settings.setProperty("sonar.auth.oidc.enabled", false);
     }

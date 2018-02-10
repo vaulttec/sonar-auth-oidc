@@ -37,9 +37,11 @@ import org.sonar.api.server.ServerSide;
 @ServerSide
 public class OidcSettings {
 
+  private static final String CATEGORY = CATEGORY_SECURITY;
+  private static final String SUBCATEGORY = "oidc";
+
   private static final String ENABLED = "sonar.auth.oidc.enabled";
   private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
-  private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
   private static final String PROVIDER_CONFIGURATION = "sonar.auth.oidc.providerConfiguration";
   private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
   private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
@@ -50,8 +52,9 @@ public class OidcSettings {
   static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
   static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
-  private static final String CATEGORY = CATEGORY_SECURITY;
-  private static final String SUBCATEGORY = "oidc";
+  private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
+  private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth.oidc.groupsSync.claimName";
+  private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
 
   private final Settings settings;
 
@@ -89,6 +92,10 @@ public class OidcSettings {
     return settings.getBoolean(GROUPS_SYNC);
   }
 
+  public String syncGroupsClaimName() {
+    return settings.getString(GROUPS_SYNC_CLAIM_NAME);
+  }
+
   public static List<PropertyDefinition> definitions() {
     int index = 1;
     return Arrays.asList(
@@ -120,10 +127,14 @@ public class OidcSettings {
             .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)
             .index(index++).build(),
         PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
-            .description("For each of his Open ID Connect userinfo 'groups' claim entries,"
+            .description("For each of his Open ID Connect userinfo groups claim entries,"
                 + " the user will be associated to a group with the same name (if it exists) in SonarQube.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
-            .build());
+            .build(),
+        PropertyDefinition.builder(GROUPS_SYNC_CLAIM_NAME).name("Groups claim name")
+            .description("Name of the claim in the Open ID Connect userinfo holding the user's groups.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE)
+            .index(index++).build());
   }
 
 }
