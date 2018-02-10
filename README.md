@@ -3,7 +3,7 @@
 
 ## Description
 
-This plugin enables users to automatically be sign up and authenticated on a SonarQube server via an [OpenID Connect](http://openid.net/connect/) identity provider like [Keycloak](http://www.keycloak.org). Optionally the groups a user is associated in SonarQube can be synchronized with the provider (via the userinfo claim `groups` retrieved from the ID token).
+This plugin enables users to automatically be sign up and authenticated on a SonarQube server via an [OpenID Connect](http://openid.net/connect/) identity provider like [Keycloak](http://www.keycloak.org). Optionally the groups a user is associated in SonarQube can be synchronized with the provider (via a custom userinfo claim retrieved from the ID token).
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
   - Create a client with access type 'public' or 'confidential' (in the latter case the corresponding client secret must be set in the plugin configuration) and valid redirect URI(s) for the SonarQube server
     ![Keycloak Client Configuration](docs/images/keycloak-client-config.png)
 
-  - For synchronizing SonarQube groups create a mapper which adds group names to the userinfo claim `groups` in the ID token
+  - For synchronizing SonarQube groups create a mapper which adds group names to a custom userinfo claim in the ID token (the claim's name is used in the plugin configuration later on)
     ![Keycloak Mapper Configuration](docs/images/keycloak-mapper-config.png)
 
   - Retrieve the provider's endpoint configuration as JSON text (needed for plugin configuration)
@@ -42,6 +42,8 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 - In SonarQube administration (General-\> Security -\> OpenID Connect):
   - Configure the plugin for the OpenID Connect client (a client secret is only required for clients with access type 'confidential')
     ![SonarQube Plugin Configuration](docs/images/plugin-config.png)
+
+  - For synchronizing groups the name of the custom userinfo claim must be the same as defined in the identity provider's mapper
 
 ## Tested with
 
