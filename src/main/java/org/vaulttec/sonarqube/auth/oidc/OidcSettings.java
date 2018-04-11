@@ -50,6 +50,7 @@ public class OidcSettings {
   static final String LOGIN_STRATEGY_UNIQUE = "Unique";
   static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
   static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
+  static final String LOGIN_STRATEGY_EMAIL = "Email";
   static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
   private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
@@ -121,10 +122,11 @@ public class OidcSettings {
         PropertyDefinition.builder(LOGIN_STRATEGY).name("Login generation strategy").description(format(
             "When the login strategy is set to '%s', the user's login will be auto-generated the first time so that it is unique."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
+                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user email."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name.",
-            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
+            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
             .subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST).defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
-            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_PREFERRED_USERNAME)
+            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)
             .index(index++).build(),
         PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
             .description("For each of his Open ID Connect userinfo groups claim entries,"
