@@ -73,6 +73,17 @@ public class UserIdentityFactoryTest {
   }
 
   @Test
+  public void create_for_email_login_strategy() {
+    UserInfo userInfo = newUserInfo();
+    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_EMAIL);
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getLogin()).isEqualTo(identity.getEmail());
+    assertThat(identity.getName()).isEqualTo("John Doo");
+    assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
+  }
+
+  @Test
   public void no_email() {
     UserInfo userInfo = newUserInfo();
     userInfo.setEmailAddress(null);
