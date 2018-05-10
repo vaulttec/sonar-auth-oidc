@@ -18,6 +18,7 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static java.lang.String.format;
+import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_EMAIL;
 import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME;
 import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PROVIDER_ID;
 import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_UNIQUE;
@@ -59,6 +60,8 @@ public class UserIdentityFactory {
       return userInfo.getPreferredUsername();
     case LOGIN_STRATEGY_PROVIDER_ID:
       return userInfo.getSubject().getValue();
+    case LOGIN_STRATEGY_EMAIL:
+      return userInfo.getEmailAddress();
     case LOGIN_STRATEGY_UNIQUE:
       return generateUniqueLogin(userInfo);
     default:
