@@ -18,6 +18,7 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 import java.util.Arrays;
 
@@ -111,6 +112,40 @@ public class UserIdentityFactoryTest {
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage("Login strategy not supported: xxx");
+    underTest.create(userInfo);
+  }
+
+  @Test
+  public void throw_ISE_if_missing_preferred_username() {
+    UserInfo userInfo = newUserInfo();
+    userInfo.setPreferredUsername(null);
+    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME);
+
+    expectedException.expect(IllegalStateException.class);
+    expectedException.expectMessage(startsWith("Claim 'preferred_username' is missing in user info"));
+    underTest.create(userInfo);
+  }
+
+  @Test
+  public void throw_ISE_if_missing_email() {
+    UserInfo userInfo = newUserInfo();
+    userInfo.setEmailAddress(null);
+    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_EMAIL);
+
+    expectedException.expect(IllegalStateException.class);
+    expectedException.expectMessage(startsWith("Claim 'email' is missing in user info"));
+    underTest.create(userInfo);
+  }
+
+  @Test
+  public void throw_ISE_if_missing_name_and_preferred_username() {
+    UserInfo userInfo = newUserInfo();
+    userInfo.setName(null);
+    userInfo.setPreferredUsername(null);
+    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_UNIQUE);
+
+    expectedException.expect(IllegalStateException.class);
+    expectedException.expectMessage(startsWith("Claims 'name' and 'preferred_username' are missing in user info"));
     underTest.create(userInfo);
   }
 

@@ -57,10 +57,18 @@ public class UserIdentityFactory {
   private String getLogin(UserInfo userInfo) {
     switch (settings.loginStrategy()) {
     case LOGIN_STRATEGY_PREFERRED_USERNAME:
+      if (userInfo.getPreferredUsername() == null) {
+        throw new IllegalStateException("Claim 'preferred_username' is missing in user info - "
+            + "make sure your OIDC provider supports this claim in the id token or at the user info endpoint");
+      }
       return userInfo.getPreferredUsername();
     case LOGIN_STRATEGY_PROVIDER_ID:
       return userInfo.getSubject().getValue();
     case LOGIN_STRATEGY_EMAIL:
+      if (userInfo.getEmailAddress() == null) {
+        throw new IllegalStateException("Claim 'email' is missing in user info - "
+            + "make sure your OIDC provider supports this claim in the id token or at the user info endpoint");
+      }
       return userInfo.getEmailAddress();
     case LOGIN_STRATEGY_UNIQUE:
       return generateUniqueLogin(userInfo);
@@ -74,8 +82,12 @@ public class UserIdentityFactory {
   }
 
   private String getName(UserInfo userInfo) {
-    String name = userInfo.getName();
-    return name == null || name.isEmpty() ? userInfo.getPreferredUsername() : name;
+    String name = userInfo.getName() != null ? userInfo.getName() : userInfo.getPreferredUsername();
+    if (name == null) {
+      throw new IllegalStateException("Claims 'name' and 'preferred_username' are missing in user info - "
+          + "make sure your OIDC provider supports these claims in the id token or at the user info endpoint");
+    }
+    return name;
   }
 
   private Set<String> getGroups(UserInfo userInfo) {
