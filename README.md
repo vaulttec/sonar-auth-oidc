@@ -30,8 +30,10 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 ## Configuration
 
 - In OpenID Connect identity provider:
-  - Create a client with access type 'public' or 'confidential' (in the latter case the corresponding client secret must be set in the plugin configuration) and valid redirect URI(s) for the SonarQube server
+  - Create a client with access type 'public' or 'confidential' (in the latter case the corresponding client secret must be set in the plugin configuration) and white-list the redirect URI for the SonarQube server `https://<sonarqube base>/oauth2/callback/oidc`
     ![Keycloak Client Configuration](docs/images/keycloak-client-config.png)
+
+    **Some IdP's (e.g. Keycloak) are supporting wildcards in the redirect URI white-list. Otherwise the absolute redirect URI must be white-listed.**
 
   - For synchronizing SonarQube groups create a mapper which adds group names to a custom userinfo claim in the ID token (the claim's name is used in the plugin configuration later on)
     ![Keycloak Mapper Configuration](docs/images/keycloak-mapper-config.png)
@@ -50,3 +52,4 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 * SonarQube 6.7.1
 * Keycloak 3.4.2.Final
 * JetBrains Hub 2017.4
+* Okta 2018.25
