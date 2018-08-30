@@ -51,11 +51,15 @@ public class OidcSettings {
   static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
   static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
   static final String LOGIN_STRATEGY_EMAIL = "Email";
+  static final String LOGIN_STRATEGY_CUSTOM_CLAIM = "Custom claim";
   static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
   private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
   private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth.oidc.groupsSync.claimName";
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
+
+  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME = "sonar.auth.oidc.loginStrategy.customClaimName";
+  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME_DEFAULT_VALUE = "upn";
 
   private final Settings settings;
 
@@ -87,6 +91,10 @@ public class OidcSettings {
 
   public String loginStrategy() {
     return settings.getString(LOGIN_STRATEGY);
+  }
+
+  public String loginStrategyClaimName() {
+    return settings.getString(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME);
   }
 
   public boolean syncGroups() {
@@ -123,10 +131,11 @@ public class OidcSettings {
             "When the login strategy is set to '%s', the user's login will be auto-generated the first time so that it is unique."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user email."
-                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name.",
-            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
+                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name."
+                + " When the login strategy is set to '%s', the user's login will be a custom claim in OpenID Connect provider's token.",
+            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME, LOGIN_STRATEGY_CUSTOM_CLAIM)).category(CATEGORY)
             .subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST).defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
-            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)
+            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME, LOGIN_STRATEGY_CUSTOM_CLAIM)
             .index(index++).build(),
         PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
             .description("For each of his Open ID Connect userinfo groups claim entries,"
@@ -136,6 +145,10 @@ public class OidcSettings {
         PropertyDefinition.builder(GROUPS_SYNC_CLAIM_NAME).name("Groups claim name")
             .description("Name of the claim in the Open ID Connect userinfo holding the user's groups.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE)
+            .index(index++).build(),
+        PropertyDefinition.builder(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME).name("Login stategy custom claim")
+            .description("Name of the claim in case login generation strategy is set to custom claim.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME_DEFAULT_VALUE)
             .index(index++).build());
   }
 
