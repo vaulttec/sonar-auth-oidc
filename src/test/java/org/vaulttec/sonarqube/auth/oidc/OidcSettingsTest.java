@@ -118,8 +118,14 @@ public class OidcSettingsTest {
   }
 
   @Test
+  public void additional_scopes() {
+    settings.setProperty("sonar.auth.oidc.additionalScopes", "groups");
+    assertThat(underTest.additionalScopes()).isEqualTo("groups");
+  }
+
+  @Test
   public void definitions() {
-    assertThat(OidcSettings.definitions()).hasSize(8);
+    assertThat(OidcSettings.definitions()).hasSize(9);
   }
 
   private String getProviderConfiguration() {

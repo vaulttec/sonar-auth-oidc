@@ -57,6 +57,8 @@ public class OidcSettings {
   private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth.oidc.groupsSync.claimName";
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
 
+  private static final String ADDITIONAL_SCOPES = "sonar.auth.oidc.additionalScopes";
+  
   private final Settings settings;
 
   public OidcSettings(Settings settings) {
@@ -95,6 +97,10 @@ public class OidcSettings {
 
   public String syncGroupsClaimName() {
     return settings.getString(GROUPS_SYNC_CLAIM_NAME);
+  }
+
+  public String additionalScopes() {
+      return settings.getString(ADDITIONAL_SCOPES);
   }
 
   public static List<PropertyDefinition> definitions() {
@@ -136,7 +142,10 @@ public class OidcSettings {
         PropertyDefinition.builder(GROUPS_SYNC_CLAIM_NAME).name("Groups claim name")
             .description("Name of the claim in the Open ID Connect userinfo holding the user's groups.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE)
-            .index(index++).build());
+            .index(index++).build(),
+        PropertyDefinition.builder(ADDITIONAL_SCOPES).name("Additional scopes")
+            .description("Addtional scopes to pass to the Open ID Connect authorize request.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build());
   }
 
 }

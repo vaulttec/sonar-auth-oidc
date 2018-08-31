@@ -68,8 +68,6 @@ public class OidcClient {
   private static final Logger LOGGER = Loggers.get(OidcClient.class);
 
   private static final ResponseType RESPONSE_TYPE = new ResponseType(Value.CODE);
-  private static final Scope SCOPE = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
-
   private final OidcSettings settings;
 
   public OidcClient(OidcSettings settings) {
@@ -79,7 +77,14 @@ public class OidcClient {
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
     try {
-      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, SCOPE, getClientId(), new URI(callbackUrl));
+      String[] additionalScopes = settings.additionalScopes().split(" ");
+      Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
+      
+      for (String additionalScope : additionalScopes) {
+        scope.Add(additionalScope);
+      }
+
+      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, scope, getClientId(), new URI(callbackUrl));
       request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
           .build();
     } catch (URISyntaxException e) {
