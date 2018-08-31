@@ -20,6 +20,7 @@ package org.vaulttec.sonarqube.auth.oidc;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
+
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -251,12 +252,14 @@ public class OidcClientTest extends AbstractOidcTest {
 
   private OidcClient newSpyOidcClient() {
     setSettings(true);
-    return createSpyOidcClient();
+    OidcClient client = createSpyOidcClient();
+    return client;
   }
 
   private OidcClient newSpyOidcClientWithAdditionalScopes(String scopes) {
     setSettings(true, ISSUER_URI, scopes);
-    return createSpyOidcClient();
+    OidcClient client = createSpyOidcClient();
+    return client;
   }
 
   private OidcClient newSpyOidcClientWithoutProfileInformation() {

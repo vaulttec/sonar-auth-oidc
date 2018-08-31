@@ -77,11 +77,16 @@ public class OidcClient {
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
     try {
-      String[] additionalScopes = settings.additionalScopes().split(" ");
       Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
       
-      for (String additionalScope : additionalScopes) {
-        scope.Add(additionalScope);
+      String additionalScopesList = settings.additionalScopes();
+      
+      if (additionalScopesList != null && additionalScopesList != "") {
+        String[] additionalScopes = additionalScopesList.split(" ");
+      
+        for (String additionalScope : additionalScopes) {
+          scope.add(additionalScope);
+        }
       }
 
       Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, scope, getClientId(), new URI(callbackUrl));
