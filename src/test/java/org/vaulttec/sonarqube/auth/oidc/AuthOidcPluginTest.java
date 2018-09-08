@@ -35,7 +35,7 @@ public class AuthOidcPluginTest {
   public void test_extensions() throws Exception {
     underTest.define(context);
 
-    assertThat(context.getExtensions()).hasSize(12);
+    assertThat(context.getExtensions()).hasSize(13);
   }
 
   private static class MockContext extends Plugin.Context {
