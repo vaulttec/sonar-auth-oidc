@@ -58,7 +58,10 @@ public class OidcSettings {
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
 
   private static final String ADDITIONAL_SCOPES = "sonar.auth.oidc.additionalScopes";
-  
+
+  private static final String LOGIN_BUTTON_TEXT = "sonar.auth.oidc.loginButtonText";
+  private static final String LOGIN_BUTTON_TEXT_DEFAULT_VALUE = "OpenID Connect";
+
   private final Settings settings;
 
   public OidcSettings(Settings settings) {
@@ -100,7 +103,11 @@ public class OidcSettings {
   }
 
   public String additionalScopes() {
-      return settings.getString(ADDITIONAL_SCOPES);
+    return settings.getString(ADDITIONAL_SCOPES);
+  }
+
+  public String loginButtonText() {
+    return settings.getString(LOGIN_BUTTON_TEXT);
   }
 
   public static List<PropertyDefinition> definitions() {
@@ -130,9 +137,11 @@ public class OidcSettings {
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user email."
                 + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name.",
-            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)).category(CATEGORY)
-            .subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST).defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
-            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME)
+            LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME))
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST)
+            .defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
+            .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL,
+                LOGIN_STRATEGY_PREFERRED_USERNAME)
             .index(index++).build(),
         PropertyDefinition.builder(GROUPS_SYNC).name("Synchronize groups")
             .description("For each of his Open ID Connect userinfo groups claim entries,"
@@ -144,8 +153,13 @@ public class OidcSettings {
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE)
             .index(index++).build(),
         PropertyDefinition.builder(ADDITIONAL_SCOPES).name("Additional scopes")
-            .description("Addtional scopes to pass to the Open ID Connect authorize request.")
-            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build());
+            .description("Addtional scopes to pass to the Open ID Connect authorize request.").category(CATEGORY)
+            .subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+        PropertyDefinition.builder(LOGIN_BUTTON_TEXT).name("Login button text")
+            .description("The text in SonarQube's login button added to 'Log in with '.").category(CATEGORY)
+            .subCategory(SUBCATEGORY).type(STRING).defaultValue(LOGIN_BUTTON_TEXT_DEFAULT_VALUE).index(index++)
+            .build());
+
   }
 
 }

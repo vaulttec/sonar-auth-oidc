@@ -40,8 +40,13 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
   @Test
   public void check_fields() throws Exception {
     assertThat(underTest.getKey()).isEqualTo("oidc");
-    assertThat(underTest.getName()).isEqualTo("OpenID Connect");
     assertThat(underTest.getDisplay().getIconPath()).isEqualTo("/static/authoidc/openid.svg");
+  }
+
+  @Test
+  public void custom_name() throws Exception {
+    settings.setProperty("sonar.auth.oidc.loginButtonText", "My text");
+    assertThat(underTest.getName()).isEqualTo("My text");
   }
 
   @Test

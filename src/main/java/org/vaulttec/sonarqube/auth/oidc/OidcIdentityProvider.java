@@ -51,7 +51,7 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
   @Override
   public String getName() {
-    return "OpenID Connect";
+    return settings.loginButtonText();
   }
 
   @Override

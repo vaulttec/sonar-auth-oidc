@@ -124,8 +124,14 @@ public class OidcSettingsTest {
   }
 
   @Test
+  public void login_button_text() {
+    settings.setProperty("sonar.auth.oidc.loginButtonText", "My Company Single-Sign-On");
+    assertThat(underTest.loginButtonText()).isEqualTo("My Company Single-Sign-On");
+  }
+
+  @Test
   public void definitions() {
-    assertThat(OidcSettings.definitions()).hasSize(9);
+    assertThat(OidcSettings.definitions()).hasSize(10);
   }
 
   private String getProviderConfiguration() {
