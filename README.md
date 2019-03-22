@@ -10,9 +10,7 @@ This plugin enables users to automatically be sign up and authenticated on a Son
 ### Server Base URL
 
 `Server base URL` property must be set either by setting the
-URL from SonarQube administration page (General -\> Server base URL) or
-through setting `sonar.core.serverBaseURL` key value in the `sonar.properties`
-file.
+URL from SonarQube administration page (General -\> Server base URL).
 
 **In this URL no trailing slash is allowed!** Otherwise the redirects from the identity provider back to the SonarQube server are not created correctly.
 
