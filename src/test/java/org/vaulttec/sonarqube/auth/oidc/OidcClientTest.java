@@ -72,9 +72,9 @@ public class OidcClientTest extends AbstractOidcTest {
 
   @Test
   public void getAuthenticationRequestWithAdditionalScopes() throws URISyntaxException {
-    OidcClient underTest = newSpyOidcClientWithAdditionalScopes("groups");
+    OidcClient underTest = newSpyOidcClientWithAdditionalScopes("address groups");
     AuthenticationRequest request = underTest.getAuthenticationRequest(CALLBACK_URL, STATE);
-    assertEquals("invalid scope", Scope.parse("openid email profile groups"), request.getScope());
+    assertEquals("invalid scope", Scope.parse("openid email profile address groups"), request.getScope());
     assertEquals("invalid client id", new ClientID("id"), request.getClientID());
     assertEquals("invalid state", new State(STATE), request.getState());
     assertEquals("invalid response type", ResponseType.getDefault(), request.getResponseType());

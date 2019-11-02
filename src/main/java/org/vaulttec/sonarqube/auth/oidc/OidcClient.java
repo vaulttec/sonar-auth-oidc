@@ -77,19 +77,7 @@ public class OidcClient {
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
     try {
-      Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
-      
-      String additionalScopesList = config.additionalScopes();
-      
-      if (additionalScopesList != null && additionalScopesList != "") {
-        String[] additionalScopes = additionalScopesList.split(" ");
-      
-        for (String additionalScope : additionalScopes) {
-          scope.add(additionalScope);
-        }
-      }
-
-      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, scope, getClientId(), new URI(callbackUrl));
+      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(), new URI(callbackUrl));
       request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
           .build();
     } catch (URISyntaxException e) {
@@ -195,6 +183,15 @@ public class OidcClient {
       throw new IllegalStateException("Invalid OpenID Connect provider configuration", e);
     }
     return providerMetadata;
+  }
+
+  private Scope getScope() {
+    Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
+    Scope additionalScopes = Scope.parse(config.additionalScopes());
+    if (additionalScopes != null) {
+      additionalScopes.forEach(scope::add);
+    }
+    return scope;
   }
 
   private ClientID getClientId() {
