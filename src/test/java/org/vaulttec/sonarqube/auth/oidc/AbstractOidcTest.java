@@ -17,11 +17,11 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_DEFAULT_VALUE;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_DEFAULT_VALUE;
 
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 
 public abstract class AbstractOidcTest {
 
@@ -33,8 +33,8 @@ public abstract class AbstractOidcTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  protected Settings settings = new Settings();
-  protected OidcSettings oidcSettings = new OidcSettings(settings);
+  protected MapSettings settings = new MapSettings();
+  protected OidcConfiguration config = new OidcConfiguration(settings.asConfig());
 
   protected void setSettings(boolean enabled) {
     setSettings(enabled, ISSUER_URI, "");

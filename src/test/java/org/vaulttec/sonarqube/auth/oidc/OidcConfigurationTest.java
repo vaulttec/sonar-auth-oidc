@@ -18,17 +18,16 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PROVIDER_ID;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
 
 import org.junit.Test;
 import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 
-public class OidcSettingsTest {
+public class OidcConfigurationTest {
 
-  Settings settings = new Settings(new PropertyDefinitions(OidcSettings.definitions()));
-
-  OidcSettings underTest = new OidcSettings(settings);
+  MapSettings settings = new MapSettings(new PropertyDefinitions(OidcConfiguration.definitions()));
+  OidcConfiguration underTest = new OidcConfiguration(settings.asConfig());
 
   @Test
   public void is_enabled() {
@@ -62,7 +61,7 @@ public class OidcSettingsTest {
 
   @Test
   public void default_login_strategy_is_preferred_username() {
-    assertThat(underTest.loginStrategy()).isEqualTo(OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME);
+    assertThat(underTest.loginStrategy()).isEqualTo(OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
   }
 
   @Test
@@ -131,7 +130,7 @@ public class OidcSettingsTest {
 
   @Test
   public void definitions() {
-    assertThat(OidcSettings.definitions()).hasSize(10);
+    assertThat(OidcConfiguration.definitions()).hasSize(10);
   }
 
   private String getProviderConfiguration() {

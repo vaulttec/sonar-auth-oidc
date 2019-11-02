@@ -35,7 +35,7 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
   private UserIdentityFactory userIdentityFactory = mock(UserIdentityFactory.class);
   private OidcClient client = newMockClient();
 
-  private OidcIdentityProvider underTest = new OidcIdentityProvider(oidcSettings, client, userIdentityFactory);
+  private OidcIdentityProvider underTest = new OidcIdentityProvider(config, client, userIdentityFactory);
 
   @Test
   public void check_fields() throws Exception {

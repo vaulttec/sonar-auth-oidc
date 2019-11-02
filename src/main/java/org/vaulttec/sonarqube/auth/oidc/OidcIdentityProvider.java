@@ -34,12 +34,12 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
   private static final Logger LOGGER = Loggers.get(OidcIdentityProvider.class);
   public static final String KEY = "oidc";
 
-  private final OidcSettings settings;
+  private final OidcConfiguration config;
   private final OidcClient client;
   private final UserIdentityFactory userIdentityFactory;
 
-  public OidcIdentityProvider(OidcSettings settings, OidcClient client, UserIdentityFactory userIdentityFactory) {
-    this.settings = settings;
+  public OidcIdentityProvider(OidcConfiguration config, OidcClient client, UserIdentityFactory userIdentityFactory) {
+    this.config = config;
     this.client = client;
     this.userIdentityFactory = userIdentityFactory;
   }
@@ -51,7 +51,7 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
   @Override
   public String getName() {
-    return settings.loginButtonText();
+    return config.loginButtonText();
   }
 
   @Override
@@ -63,12 +63,12 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
   @Override
   public boolean isEnabled() {
-    return settings.isEnabled();
+    return config.isEnabled();
   }
 
   @Override
   public boolean allowsUsersToSignUp() {
-    return settings.allowUsersToSignUp();
+    return config.allowUsersToSignUp();
   }
 
   @Override

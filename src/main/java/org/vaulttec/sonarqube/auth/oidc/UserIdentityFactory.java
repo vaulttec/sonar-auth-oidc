@@ -18,10 +18,10 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static java.lang.String.format;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_EMAIL;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_PROVIDER_ID;
-import static org.vaulttec.sonarqube.auth.oidc.OidcSettings.LOGIN_STRATEGY_UNIQUE;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_EMAIL;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_UNIQUE;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,23 +39,23 @@ import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 @ServerSide
 public class UserIdentityFactory {
 
-  private final OidcSettings settings;
+  private final OidcConfiguration config;
 
-  public UserIdentityFactory(OidcSettings settings) {
-    this.settings = settings;
+  public UserIdentityFactory(OidcConfiguration config) {
+    this.config = config;
   }
 
   public UserIdentity create(UserInfo userInfo) {
     UserIdentity.Builder builder = UserIdentity.builder().setProviderLogin(userInfo.getSubject().getValue())
         .setLogin(getLogin(userInfo)).setName(getName(userInfo)).setEmail(userInfo.getEmailAddress());
-    if (settings.syncGroups()) {
+    if (config.syncGroups()) {
       builder.setGroups(getGroups(userInfo));
     }
     return builder.build();
   }
 
   private String getLogin(UserInfo userInfo) {
-    switch (settings.loginStrategy()) {
+    switch (config.loginStrategy()) {
     case LOGIN_STRATEGY_PREFERRED_USERNAME:
       if (userInfo.getPreferredUsername() == null) {
         throw new IllegalStateException("Claim 'preferred_username' is missing in user info - "
@@ -73,7 +73,7 @@ public class UserIdentityFactory {
     case LOGIN_STRATEGY_UNIQUE:
       return generateUniqueLogin(userInfo);
     default:
-      throw new IllegalStateException(format("Login strategy not supported: %s", settings.loginStrategy()));
+      throw new IllegalStateException(format("Login strategy not supported: %s", config.loginStrategy()));
     }
   }
 
@@ -91,7 +91,7 @@ public class UserIdentityFactory {
   }
 
   private Set<String> getGroups(UserInfo userInfo) {
-    List<String> groupsClaim = userInfo.getStringListClaim(settings.syncGroupsClaimName());
+    List<String> groupsClaim = userInfo.getStringListClaim(config.syncGroupsClaimName());
     return groupsClaim != null ? new HashSet<>(groupsClaim) : Collections.emptySet();
   }
 

@@ -68,10 +68,10 @@ public class OidcClient {
   private static final Logger LOGGER = Loggers.get(OidcClient.class);
 
   private static final ResponseType RESPONSE_TYPE = new ResponseType(Value.CODE);
-  private final OidcSettings settings;
+  private final OidcConfiguration config;
 
-  public OidcClient(OidcSettings settings) {
-    this.settings = settings;
+  public OidcClient(OidcConfiguration config) {
+    this.config = config;
   }
 
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
@@ -79,7 +79,7 @@ public class OidcClient {
     try {
       Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
       
-      String additionalScopesList = settings.additionalScopes();
+      String additionalScopesList = config.additionalScopes();
       
       if (additionalScopesList != null && additionalScopesList != "") {
         String[] additionalScopes = additionalScopesList.split(" ");
@@ -190,7 +190,7 @@ public class OidcClient {
   private OIDCProviderMetadata getProviderMetadata() {
     OIDCProviderMetadata providerMetadata;
     try {
-      providerMetadata = OIDCProviderMetadata.parse(settings.providerConfiguration());
+      providerMetadata = OIDCProviderMetadata.parse(config.providerConfiguration());
     } catch (ParseException e) {
       throw new IllegalStateException("Invalid OpenID Connect provider configuration", e);
     }
@@ -198,11 +198,11 @@ public class OidcClient {
   }
 
   private ClientID getClientId() {
-    return new ClientID(settings.clientId());
+    return new ClientID(config.clientId());
   }
 
   private Secret getClientSecret() {
-    String secret = settings.clientSecret();
+    String secret = config.clientSecret();
     return secret == null ? new Secret("") : new Secret(secret);
   }
 

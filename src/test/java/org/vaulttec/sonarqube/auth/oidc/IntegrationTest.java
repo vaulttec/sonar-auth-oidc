@@ -51,9 +51,9 @@ public class IntegrationTest extends AbstractOidcTest {
   public MockWebServer idp = new MockWebServer();
   private String idpUri = format("http://%s:%d", idp.getHostName(), idp.getPort());
 
-  OidcClient oidcClient = new OidcClient(oidcSettings);
-  UserIdentityFactory userIdentityFactory = new UserIdentityFactory(oidcSettings);
-  OidcIdentityProvider underTest = new OidcIdentityProvider(oidcSettings, oidcClient, userIdentityFactory);
+  OidcClient oidcClient = new OidcClient(config);
+  UserIdentityFactory userIdentityFactory = new UserIdentityFactory(config);
+  OidcIdentityProvider underTest = new OidcIdentityProvider(config, oidcClient, userIdentityFactory);
 
   @Before
   public void enableSettings() {
@@ -218,6 +218,10 @@ public class IntegrationTest extends AbstractOidcTest {
     @Override
     public HttpServletResponse getResponse() {
       throw new UnsupportedOperationException("not used");
+    }
+
+    @Override
+    public void verifyCsrfState(String parameterName) {
     }
   }
 

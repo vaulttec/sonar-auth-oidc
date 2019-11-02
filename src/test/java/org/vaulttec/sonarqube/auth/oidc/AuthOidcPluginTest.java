@@ -21,8 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import org.sonar.api.Plugin;
+import org.sonar.api.SonarEdition;
+import org.sonar.api.SonarQubeSide;
+import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
-import org.vaulttec.sonarqube.auth.oidc.AuthOidcPlugin;
 
 public class AuthOidcPluginTest {
 
@@ -40,7 +42,7 @@ public class AuthOidcPluginTest {
 
   private static class MockContext extends Plugin.Context {
     MockContext() {
-      super(Version.create(5, 6));
+      super(SonarRuntimeImpl.forSonarQube(Version.create(7, 9), SonarQubeSide.SERVER, SonarEdition.COMMUNITY));
     }
   }
 

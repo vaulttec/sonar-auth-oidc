@@ -30,12 +30,12 @@ import java.util.List;
 
 import javax.annotation.CheckForNull;
 
+import org.sonar.api.config.Configuration;
 import org.sonar.api.config.PropertyDefinition;
-import org.sonar.api.config.Settings;
 import org.sonar.api.server.ServerSide;
 
 @ServerSide
-public class OidcSettings {
+public class OidcConfiguration {
 
   private static final String CATEGORY = CATEGORY_SECURITY;
   private static final String SUBCATEGORY = "oidc";
@@ -62,52 +62,52 @@ public class OidcSettings {
   private static final String LOGIN_BUTTON_TEXT = "sonar.auth.oidc.loginButtonText";
   private static final String LOGIN_BUTTON_TEXT_DEFAULT_VALUE = "OpenID Connect";
 
-  private final Settings settings;
+  private final Configuration config;
 
-  public OidcSettings(Settings settings) {
-    this.settings = settings;
+  public OidcConfiguration(Configuration config) {
+    this.config = config;
   }
 
   public boolean isEnabled() {
-    return settings.getBoolean(ENABLED) && providerConfiguration() != null && clientId() != null;
+    return config.getBoolean(ENABLED).orElse(false) && providerConfiguration() != null && clientId() != null;
   }
 
   @CheckForNull
   public String providerConfiguration() {
-    return settings.getString(PROVIDER_CONFIGURATION);
+    return config.get(PROVIDER_CONFIGURATION).orElse(null);
   }
 
   @CheckForNull
   public String clientId() {
-    return settings.getString(CLIENT_ID);
+    return config.get(CLIENT_ID).orElse(null);
   }
 
   public String clientSecret() {
-    return settings.getString(CLIENT_SECRET);
+    return config.get(CLIENT_SECRET).orElse(null);
   }
 
   public boolean allowUsersToSignUp() {
-    return settings.getBoolean(ALLOW_USERS_TO_SIGN_UP);
+    return config.getBoolean(ALLOW_USERS_TO_SIGN_UP).orElse(false);
   }
 
   public String loginStrategy() {
-    return settings.getString(LOGIN_STRATEGY);
+    return config.get(LOGIN_STRATEGY).orElse(null);
   }
 
   public boolean syncGroups() {
-    return settings.getBoolean(GROUPS_SYNC);
+    return config.getBoolean(GROUPS_SYNC).orElse(false);
   }
 
   public String syncGroupsClaimName() {
-    return settings.getString(GROUPS_SYNC_CLAIM_NAME);
+    return config.get(GROUPS_SYNC_CLAIM_NAME).orElse(null);
   }
 
   public String additionalScopes() {
-    return settings.getString(ADDITIONAL_SCOPES);
+    return config.get(ADDITIONAL_SCOPES).orElse(null);
   }
 
   public String loginButtonText() {
-    return settings.getString(LOGIN_BUTTON_TEXT);
+    return config.get(LOGIN_BUTTON_TEXT).orElse(null);
   }
 
   public static List<PropertyDefinition> definitions() {

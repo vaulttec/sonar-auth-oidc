@@ -26,7 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.server.authentication.UserIdentity;
 
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -37,13 +37,13 @@ public class UserIdentityFactoryTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  Settings settings = new Settings(new PropertyDefinitions(OidcSettings.definitions()));
-  UserIdentityFactory underTest = new UserIdentityFactory(new OidcSettings(settings));
+  MapSettings settings = new MapSettings(new PropertyDefinitions(OidcConfiguration.definitions()));
+  UserIdentityFactory underTest = new UserIdentityFactory(new OidcConfiguration(settings.asConfig()));
 
   @Test
   public void create_for_provider_strategy() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_PROVIDER_ID);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
@@ -54,7 +54,7 @@ public class UserIdentityFactoryTest {
   @Test
   public void create_for_unique_login_strategy() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_UNIQUE);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8@oidc");
@@ -65,7 +65,7 @@ public class UserIdentityFactoryTest {
   @Test
   public void create_for_preferred_username_login_strategy() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getLogin()).isEqualTo("jdoo");
@@ -76,7 +76,7 @@ public class UserIdentityFactoryTest {
   @Test
   public void create_for_email_login_strategy() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_EMAIL);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getLogin()).isEqualTo(identity.getEmail());
@@ -88,7 +88,7 @@ public class UserIdentityFactoryTest {
   public void no_email() {
     UserInfo userInfo = newUserInfo();
     userInfo.setEmailAddress(null);
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_PROVIDER_ID);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
@@ -108,7 +108,7 @@ public class UserIdentityFactoryTest {
   @Test
   public void throw_ISE_if_strategy_is_not_supported() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, "xxx");
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, "xxx");
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage("Login strategy not supported: xxx");
@@ -119,7 +119,7 @@ public class UserIdentityFactoryTest {
   public void throw_ISE_if_missing_preferred_username() {
     UserInfo userInfo = newUserInfo();
     userInfo.setPreferredUsername(null);
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_PREFERRED_USERNAME);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(startsWith("Claim 'preferred_username' is missing in user info"));
@@ -130,7 +130,7 @@ public class UserIdentityFactoryTest {
   public void throw_ISE_if_missing_email() {
     UserInfo userInfo = newUserInfo();
     userInfo.setEmailAddress(null);
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_EMAIL);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(startsWith("Claim 'email' is missing in user info"));
@@ -142,7 +142,7 @@ public class UserIdentityFactoryTest {
     UserInfo userInfo = newUserInfo();
     userInfo.setName(null);
     userInfo.setPreferredUsername(null);
-    settings.setProperty(OidcSettings.LOGIN_STRATEGY, OidcSettings.LOGIN_STRATEGY_UNIQUE);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(startsWith("Claims 'name' and 'preferred_username' are missing in user info"));

@@ -23,8 +23,8 @@ public class AuthOidcPlugin implements Plugin {
 
   @Override
   public void define(Context context) {
-    context.addExtensions(OidcSettings.class, OidcClient.class, OidcIdentityProvider.class, UserIdentityFactory.class);
-    context.addExtensions(OidcSettings.definitions());
+    context.addExtensions(OidcConfiguration.class, OidcClient.class, OidcIdentityProvider.class, UserIdentityFactory.class);
+    context.addExtensions(OidcConfiguration.definitions());
   }
 
 }
