@@ -59,6 +59,12 @@ public class OidcConfiguration {
 
   private static final String ADDITIONAL_SCOPES = "sonar.auth.oidc.additionalScopes";
 
+  private static final String ICON_PATH = "sonar.auth.oidc.iconPath";
+  private static final String ICON_PATH_DEFAULT_VALUE = "/static/authoidc/openid.svg";
+
+  private static final String BACKGROUND_COLOR = "sonar.auth.oidc.backgroundColor";
+  private static final String BACKGROUND_COLOR_DEFAULT_VALUE = "#236a97";
+
   private static final String LOGIN_BUTTON_TEXT = "sonar.auth.oidc.loginButtonText";
   private static final String LOGIN_BUTTON_TEXT_DEFAULT_VALUE = "OpenID Connect";
 
@@ -104,6 +110,14 @@ public class OidcConfiguration {
 
   public String additionalScopes() {
     return config.get(ADDITIONAL_SCOPES).orElse(null);
+  }
+
+  public String iconPath() {
+    return config.get(ICON_PATH).orElse(null);
+  }
+
+  public String backgroundColor() {
+    return config.get(BACKGROUND_COLOR).orElse(null);
   }
 
   public String loginButtonText() {
@@ -155,9 +169,18 @@ public class OidcConfiguration {
         PropertyDefinition.builder(ADDITIONAL_SCOPES).name("Additional scopes")
             .description("Addtional scopes to pass to the Open ID Connect authorize request.").category(CATEGORY)
             .subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+        PropertyDefinition.builder(ICON_PATH).name("Icon path")
+            .description("Path to the provider icon - default icon shipped with plugin \"" + ICON_PATH_DEFAULT_VALUE
+                + "\" or external URL (for example \"http://www.mydomain/myincon.png\").")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(ICON_PATH_DEFAULT_VALUE)
+            .index(index++).build(),
+        PropertyDefinition.builder(BACKGROUND_COLOR).name("Background color").description(
+            "Background color (hexadecimal value, for example \"#205081\") for the provider button displayed in the login form.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(BACKGROUND_COLOR_DEFAULT_VALUE)
+            .index(index++).build(),
         PropertyDefinition.builder(LOGIN_BUTTON_TEXT).name("Login button text")
             .description("The text in SonarQube's login button added to 'Log in with '.").category(CATEGORY)
-            .subCategory(SUBCATEGORY).type(STRING).defaultValue(LOGIN_BUTTON_TEXT_DEFAULT_VALUE).index(index++)
+            .subCategory(SUBCATEGORY).type(STRING).defaultValue(LOGIN_BUTTON_TEXT_DEFAULT_VALUE).index(index)
             .build());
 
   }

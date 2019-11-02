@@ -40,7 +40,6 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
   @Test
   public void check_fields() throws Exception {
     assertThat(underTest.getKey()).isEqualTo("oidc");
-    assertThat(underTest.getDisplay().getIconPath()).isEqualTo("/static/authoidc/openid.svg");
   }
 
   @Test

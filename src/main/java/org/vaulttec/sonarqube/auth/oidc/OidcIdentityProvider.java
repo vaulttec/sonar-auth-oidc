@@ -56,9 +56,7 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
   @Override
   public Display getDisplay() {
-    return Display.builder()
-        // URL of src/main/resources/static/openid.svg at runtime
-        .setIconPath("/static/authoidc/openid.svg").build();
+    return Display.builder().setIconPath(config.iconPath()).setBackgroundColor(config.backgroundColor()).build();
   }
 
   @Override

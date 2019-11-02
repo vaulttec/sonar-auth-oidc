@@ -123,6 +123,18 @@ public class OidcConfigurationTest {
   }
 
   @Test
+  public void icon_path() {
+    settings.setProperty("sonar.auth.oidc.iconPath", "http://mydomain.com/myicon.png");
+    assertThat(underTest.iconPath()).isEqualTo("http://mydomain.com/myicon.png");
+  }
+
+  @Test
+  public void background_color() {
+    settings.setProperty("sonar.auth.oidc.backgroundColor", "#123456");
+    assertThat(underTest.backgroundColor()).isEqualTo("#123456");
+  }
+
+  @Test
   public void login_button_text() {
     settings.setProperty("sonar.auth.oidc.loginButtonText", "My Company Single-Sign-On");
     assertThat(underTest.loginButtonText()).isEqualTo("My Company Single-Sign-On");
@@ -130,7 +142,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void definitions() {
-    assertThat(OidcConfiguration.definitions()).hasSize(10);
+    assertThat(OidcConfiguration.definitions()).hasSize(12);
   }
 
   private String getProviderConfiguration() {
