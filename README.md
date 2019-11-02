@@ -3,7 +3,10 @@
 
 ## Description
 
-This plugin enables users to automatically be sign up and authenticated on a SonarQube server via an [OpenID Connect](http://openid.net/connect/) identity provider like [Keycloak](http://www.keycloak.org). Optionally the groups a user is associated in SonarQube can be synchronized with the provider (via a custom userinfo claim retrieved from the ID token).
+This plugin enables users to automatically be sign up and authenticated on a SonarQube server via an [OpenID Connect](http://openid.net/connect/) identity provider like [Keycloak](http://www.keycloak.org).
+![SonarQube Login](docs/images/login.png)
+
+Optionally the groups a user is associated in SonarQube can be synchronized with the provider (via a custom userinfo claim retrieved from the ID token).
 
 ## Prerequisites
 
@@ -47,7 +50,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
 ## Tested with
 
-* SonarQube 6.7.1
-* Keycloak 3.4.2.Final
+* SonarQube 7.9.1
+* Keycloak 4.8.1.Final
 * JetBrains Hub 2017.4
 * Okta 2018.25
