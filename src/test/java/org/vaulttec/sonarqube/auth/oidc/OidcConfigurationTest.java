@@ -142,7 +142,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void definitions() {
-    assertThat(OidcConfiguration.definitions()).hasSize(12);
+    assertThat(OidcConfiguration.definitions()).hasSize(13);
   }
 
   private String getProviderConfiguration() {

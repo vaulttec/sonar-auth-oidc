@@ -85,6 +85,18 @@ public class UserIdentityFactoryTest {
   }
 
   @Test
+  public void create_for_custom_claim_strategy() {
+    UserInfo userInfo = newUserInfo();
+    userInfo.setClaim("upn", "johndoo");
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getLogin()).isEqualTo(userInfo.getClaim("upn"));
+    assertThat(identity.getName()).isEqualTo("John Doo");
+    assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
+  }
+
+  @Test
   public void no_email() {
     UserInfo userInfo = newUserInfo();
     userInfo.setEmailAddress(null);
@@ -146,6 +158,16 @@ public class UserIdentityFactoryTest {
 
     expectedException.expect(IllegalStateException.class);
     expectedException.expectMessage(startsWith("Claims 'name' and 'preferred_username' are missing in user info"));
+    underTest.create(userInfo);
+  }
+
+  @Test
+  public void throw_ISE_if_missing_custom_claim() {
+    UserInfo userInfo = newUserInfo();
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
+
+    expectedException.expect(IllegalStateException.class);
+    expectedException.expectMessage(startsWith("Custom claim 'upn' is missing in user info"));
     underTest.create(userInfo);
   }
 

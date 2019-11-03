@@ -22,6 +22,7 @@ import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_UNIQUE;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -72,6 +73,13 @@ public class UserIdentityFactory {
       return userInfo.getEmailAddress();
     case LOGIN_STRATEGY_UNIQUE:
       return generateUniqueLogin(userInfo);
+    case LOGIN_STRATEGY_CUSTOM_CLAIM:
+      if (userInfo.getStringClaim(config.loginStrategyCustomClaimName()) == null) {
+        throw new IllegalStateException(
+            "Custom claim '" + config.loginStrategyCustomClaimName() + "' is missing in user info - "
+                + "make sure your OIDC provider supports this claim in the id token or at the user info endpoint");
+      }
+      return userInfo.getStringClaim(config.loginStrategyCustomClaimName());
     default:
       throw new IllegalStateException(format("Login strategy not supported: %s", config.loginStrategy()));
     }
