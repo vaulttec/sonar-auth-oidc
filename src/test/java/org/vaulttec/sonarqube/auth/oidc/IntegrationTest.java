@@ -87,7 +87,7 @@ public class IntegrationTest extends AbstractOidcTest {
 
     // generate an unique login by default (suffixed by "@oidc"), instead of copying
     // oidc login as-this.
-    assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
+    assertThat(callbackContext.userIdentity.getProviderLogin()).isEqualTo("john.doo");
     assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
     assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
     assertThat(callbackContext.userIdentity.getGroups()).hasSize(2);
@@ -115,7 +115,7 @@ public class IntegrationTest extends AbstractOidcTest {
 
     // generate an unique login by default (suffixed by "@oidc"), instead of copying
     // oidc login as-this.
-    assertThat(callbackContext.userIdentity.getLogin()).isEqualTo("john.doo");
+    assertThat(callbackContext.userIdentity.getProviderLogin()).isEqualTo("john.doo");
     assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
     assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
     assertThat(callbackContext.userIdentity.getGroups()).hasSize(2);

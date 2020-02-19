@@ -46,7 +46,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
+    assertThat(identity.getProviderLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
   }
@@ -57,7 +57,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8@oidc");
+    assertThat(identity.getProviderLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8@oidc");
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
   }
@@ -68,7 +68,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo("jdoo");
+    assertThat(identity.getProviderLogin()).isEqualTo("jdoo");
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
   }
@@ -79,7 +79,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo(identity.getEmail());
+    assertThat(identity.getProviderLogin()).isEqualTo(identity.getEmail());
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
   }
@@ -91,7 +91,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo(userInfo.getClaim("upn"));
+    assertThat(identity.getProviderLogin()).isEqualTo(userInfo.getClaim("upn"));
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isEqualTo("john.doo@acme.com");
   }
@@ -103,7 +103,7 @@ public class UserIdentityFactoryTest {
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
     UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
+    assertThat(identity.getProviderLogin()).isEqualTo("8f63a486-6699-4f25-beef-118dd240bef8");
     assertThat(identity.getName()).isEqualTo("John Doo");
     assertThat(identity.getEmail()).isNull();
   }
