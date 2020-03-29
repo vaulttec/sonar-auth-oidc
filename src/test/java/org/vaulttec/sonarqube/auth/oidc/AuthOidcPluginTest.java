@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import org.sonar.api.Plugin;
-import org.sonar.api.SonarEdition;
 import org.sonar.api.SonarQubeSide;
 import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
@@ -42,7 +41,7 @@ public class AuthOidcPluginTest {
 
   private static class MockContext extends Plugin.Context {
     MockContext() {
-      super(SonarRuntimeImpl.forSonarQube(Version.create(7, 9), SonarQubeSide.SERVER, SonarEdition.COMMUNITY));
+      super(SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SERVER));
     }
   }
 
