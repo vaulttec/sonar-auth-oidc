@@ -156,8 +156,11 @@ public class OidcClient {
       HTTPResponse response = request.toHTTPRequest().send();
       LOGGER.debug("Token response content: {}", response.getContent());
       tokenResponse = OIDCTokenResponseParser.parse(response);
-    } catch (URISyntaxException | IOException | ParseException e) {
+    } catch (URISyntaxException | ParseException e) {
       throw new IllegalStateException("Retrieving access token failed", e);
+    } catch (IOException e) {
+      throw new IllegalStateException("Retrieving access token failed: "
+          + "Identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties'");
     }
     return tokenResponse;
   }
@@ -169,8 +172,11 @@ public class OidcClient {
       HTTPResponse response = request.toHTTPRequest().send();
       LOGGER.debug("UserInfo response content: {}", response.getContent());
       userInfoResponse = UserInfoResponse.parse(response);
-    } catch (IOException | ParseException e) {
+    } catch (ParseException e) {
       throw new IllegalStateException("Retrieving user information failed", e);
+    } catch (IOException e) {
+      throw new IllegalStateException("Retrieving user information failed: "
+          + "Identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties'");
     }
     return userInfoResponse;
   }
