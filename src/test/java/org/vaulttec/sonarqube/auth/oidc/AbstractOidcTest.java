@@ -37,14 +37,10 @@ public abstract class AbstractOidcTest {
   protected OidcConfiguration config = new OidcConfiguration(settings.asConfig());
 
   protected void setSettings(boolean enabled) {
-    setSettings(enabled, ISSUER_URI, "");
-  }
-  
-  protected void setSettings(boolean enabled, String issuerUri) {
-    setSettings(enabled, issuerUri, "");
+    setSettings(enabled, ISSUER_URI);
   }
 
-  protected void setSettings(boolean enabled, String issuerUri, String additionalScopes) {
+  protected void setSettings(boolean enabled, String issuerUri) {
     if (enabled) {
       settings.setProperty("sonar.auth.oidc.enabled", true);
       settings.setProperty("sonar.auth.oidc.providerConfiguration", getProviderConfiguration(issuerUri));
@@ -54,7 +50,7 @@ public abstract class AbstractOidcTest {
       settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
       settings.setProperty("sonar.auth.oidc.groupsSync", true);
       settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "myGroups");
-      settings.setProperty("sonar.auth.oidc.additionalScopes", additionalScopes);
+      settings.setProperty("sonar.auth.oidc.scopes", "openid email profile");
     } else {
       settings.setProperty("sonar.auth.oidc.enabled", false);
     }

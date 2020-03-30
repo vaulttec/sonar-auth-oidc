@@ -117,9 +117,9 @@ public class OidcConfigurationTest {
   }
 
   @Test
-  public void additional_scopes() {
-    settings.setProperty("sonar.auth.oidc.additionalScopes", "groups");
-    assertThat(underTest.additionalScopes()).isEqualTo("groups");
+  public void scopes() {
+    settings.setProperty("sonar.auth.oidc.scopes", "openid");
+    assertThat(underTest.scopes()).isEqualTo("openid");
   }
 
   @Test

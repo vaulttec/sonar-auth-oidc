@@ -51,7 +51,6 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest.Builder;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.nimbusds.openid.connect.sdk.OIDCScopeValue;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
@@ -192,12 +191,7 @@ public class OidcClient {
   }
 
   private Scope getScope() {
-    Scope scope = new Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL, OIDCScopeValue.PROFILE);
-    Scope additionalScopes = Scope.parse(config.additionalScopes());
-    if (additionalScopes != null) {
-      additionalScopes.forEach(scope::add);
-    }
-    return scope;
+    return Scope.parse(config.scopes());
   }
 
   private ClientID getClientId() {

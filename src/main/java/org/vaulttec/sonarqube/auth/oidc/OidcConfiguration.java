@@ -46,6 +46,9 @@ public class OidcConfiguration {
   private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
   private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
 
+  private static final String SCOPES = "sonar.auth.oidc.scopes";
+  private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
+
   static final String LOGIN_STRATEGY = "sonar.auth.oidc.loginStrategy";
   static final String LOGIN_STRATEGY_UNIQUE = "Unique";
   static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
@@ -60,8 +63,6 @@ public class OidcConfiguration {
   private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
   private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth.oidc.groupsSync.claimName";
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
-
-  private static final String ADDITIONAL_SCOPES = "sonar.auth.oidc.additionalScopes";
 
   private static final String ICON_PATH = "sonar.auth.oidc.iconPath";
   private static final String ICON_PATH_DEFAULT_VALUE = "/static/authoidc/openid.svg";
@@ -96,6 +97,10 @@ public class OidcConfiguration {
     return config.get(CLIENT_SECRET).orElse(null);
   }
 
+  public String scopes() {
+    return config.get(SCOPES).orElse("openid");
+  }
+
   public boolean allowUsersToSignUp() {
     return config.getBoolean(ALLOW_USERS_TO_SIGN_UP).orElse(false);
   }
@@ -114,10 +119,6 @@ public class OidcConfiguration {
 
   public String syncGroupsClaimName() {
     return config.get(GROUPS_SYNC_CLAIM_NAME).orElse(null);
-  }
-
-  public String additionalScopes() {
-    return config.get(ADDITIONAL_SCOPES).orElse(null);
   }
 
   public String iconPath() {
@@ -150,6 +151,10 @@ public class OidcConfiguration {
             .description("The shared secret of a non-public client. "
                 + "This is only needed for an OpenID Connect client with access type \"confidential\".")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
+        PropertyDefinition.builder(SCOPES).name("Scopes")
+            .description("OAuth scopes ('openid' is required) to pass in the Open ID Connect authorize request.")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(SCOPES_DEFAULT_VALUE).index(index++)
+            .build(),
         PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up").description(
             "Allow new users to authenticate. When set to 'false', only existing users will be able to authenticate to the server.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
@@ -179,9 +184,6 @@ public class OidcConfiguration {
             .description("Name of the claim in the Open ID Connect userinfo holding the user's groups.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE)
             .index(index++).build(),
-        PropertyDefinition.builder(ADDITIONAL_SCOPES).name("Additional scopes")
-            .description("Addtional scopes to pass to the Open ID Connect authorize request.").category(CATEGORY)
-            .subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
         PropertyDefinition.builder(ICON_PATH).name("Icon path")
             .description("Path to the provider icon - default icon shipped with plugin \"" + ICON_PATH_DEFAULT_VALUE
                 + "\" or external URL (for example \"http://www.mydomain/myincon.png\").")

@@ -20,7 +20,6 @@ package org.vaulttec.sonarqube.auth.oidc;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
-
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -61,20 +60,7 @@ public class OidcClientTest extends AbstractOidcTest {
   public void getAuthenticationRequest() throws URISyntaxException {
     OidcClient underTest = newSpyOidcClient();
     AuthenticationRequest request = underTest.getAuthenticationRequest(CALLBACK_URL, STATE);
-    assertEquals("invalid scope", Scope.parse("openid email profile"), request.getScope());
-    assertEquals("invalid client id", new ClientID("id"), request.getClientID());
-    assertEquals("invalid state", new State(STATE), request.getState());
-    assertEquals("invalid response type", ResponseType.getDefault(), request.getResponseType());
-    assertEquals("invalid redirect uri", new URI(CALLBACK_URL), request.getRedirectionURI());
-    assertEquals("invalid endpoint uri", new URI(ISSUER_URI).resolve("/protocol/openid-connect/auth"),
-        request.getEndpointURI());
-  }
-
-  @Test
-  public void getAuthenticationRequestWithAdditionalScopes() throws URISyntaxException {
-    OidcClient underTest = newSpyOidcClientWithAdditionalScopes("address groups");
-    AuthenticationRequest request = underTest.getAuthenticationRequest(CALLBACK_URL, STATE);
-    assertEquals("invalid scope", Scope.parse("openid email profile address groups"), request.getScope());
+    assertEquals("invalid scope", Scope.parse("openid profile email"), request.getScope());
     assertEquals("invalid client id", new ClientID("id"), request.getClientID());
     assertEquals("invalid state", new State(STATE), request.getState());
     assertEquals("invalid response type", ResponseType.getDefault(), request.getResponseType());
@@ -252,12 +238,6 @@ public class OidcClientTest extends AbstractOidcTest {
 
   private OidcClient newSpyOidcClient() {
     setSettings(true);
-    OidcClient client = createSpyOidcClient();
-    return client;
-  }
-
-  private OidcClient newSpyOidcClientWithAdditionalScopes(String scopes) {
-    setSettings(true, ISSUER_URI, scopes);
     OidcClient client = createSpyOidcClient();
     return client;
   }
