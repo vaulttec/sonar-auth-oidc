@@ -39,7 +39,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
   - For synchronizing SonarQube groups create a mapper which adds group names to a custom userinfo claim in the ID token (the claim's name is used in the plugin configuration later on)
     ![Keycloak Mapper Configuration](docs/images/keycloak-mapper-config.png)
 
-  - Retrieve the [provider's endpoint configuration](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata) as JSON text via the providers [`/.well-known/openid-configuration` URL](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) (needed for plugin configuration)
+  - The [provider's discovery URI](https://openid.net/specs/openid-connect-discovery-1_0.html) (without the [`/.well-known/openid-configuration`](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) path) is needed for the plugin configuration (Issuer URI)
     ![Keycloak Client Configuration](docs/images/keycloak-endpoint-config.png)
 
 - In SonarQube administration (General-\> Security -\> OpenID Connect):
@@ -50,7 +50,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
 ## Tested with
 
-* SonarQube 7.9.1
+* SonarQube 7.9.1, 8.2
 * Keycloak 4.8.1.Final
 * JetBrains Hub 2017.4
 * Okta 2018.25
