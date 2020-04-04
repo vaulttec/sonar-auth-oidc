@@ -159,11 +159,11 @@ public class OidcConfiguration {
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
             .build(),
         PropertyDefinition.builder(LOGIN_STRATEGY).name("Login generation strategy").description(format(
-            "When the login strategy is set to '%s', the user's login will be auto-generated the first time so that it is unique."
-                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's internal user ID."
-                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user email."
-                + " When the login strategy is set to '%s', the user's login will be the OpenID Connect provider's user name."
-                + " When the login strategy is set to '%s', the user's login will be a custom claim in OpenID Connect provider's token.",
+            "When the login strategy is set to '%s', the provider login will be auto-generated the first time so that it is unique."
+                + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's internal user ID."
+                + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's user email."
+                + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's user name."
+                + " When the login strategy is set to '%s', the provider login will be a custom claim in OpenID Connect provider's token.",
             LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME,
             LOGIN_STRATEGY_CUSTOM_CLAIM)).category(CATEGORY).subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST)
             .defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)
