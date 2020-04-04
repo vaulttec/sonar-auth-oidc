@@ -170,7 +170,7 @@ public class OidcConfiguration {
             .options(LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL,
                 LOGIN_STRATEGY_PREFERRED_USERNAME, LOGIN_STRATEGY_CUSTOM_CLAIM)
             .index(index++).build(),
-        PropertyDefinition.builder(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME).name("Login stategy custom claim")
+        PropertyDefinition.builder(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME).name("Login strategy custom claim")
             .description("Name of the claim in case login generation strategy is set to custom claim.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING)
             .defaultValue(LOGIN_STRATEGY_CUSTOM_CLAIM_NAME_DEFAULT_VALUE).index(index++).build(),
