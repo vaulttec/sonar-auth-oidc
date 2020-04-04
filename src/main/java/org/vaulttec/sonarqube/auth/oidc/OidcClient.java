@@ -30,6 +30,7 @@ import org.sonar.api.utils.log.Loggers;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.ResponseType.Value;
@@ -43,6 +44,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.http.ServletUtils;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
@@ -76,7 +78,8 @@ public class OidcClient {
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
     try {
-      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(), new URI(callbackUrl));
+      Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(),
+          new URI(callbackUrl));
       request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
           .build();
     } catch (URISyntaxException e) {
@@ -106,8 +109,6 @@ public class OidcClient {
   }
 
   public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
-    LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}",
-        getProviderMetadata().getTokenEndpointURI());
     TokenResponse tokenResponse = getTokenResponse(authorizationCode, callbackUrl);
     if (tokenResponse instanceof TokenErrorResponse) {
       ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
@@ -128,7 +129,6 @@ public class OidcClient {
     }
 
     if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
-      LOGGER.debug("Retrieving user info from {}", getProviderMetadata().getUserInfoEndpointURI());
       UserInfoResponse userInfoResponse = getUserInfoResponse(oidcTokens.getBearerAccessToken());
       if (userInfoResponse instanceof UserInfoErrorResponse) {
         ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
@@ -147,47 +147,45 @@ public class OidcClient {
   }
 
   protected TokenResponse getTokenResponse(AuthorizationCode authorizationCode, String callbackUrl) {
-    TokenResponse tokenResponse;
     try {
-      TokenRequest request = new TokenRequest(getProviderMetadata().getTokenEndpointURI(),
-          new ClientSecretBasic(getClientId(), getClientSecret()),
+      URI tokenEndpointURI = getProviderMetadata().getTokenEndpointURI();
+      LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}", tokenEndpointURI);
+      TokenRequest request = new TokenRequest(tokenEndpointURI, new ClientSecretBasic(getClientId(), getClientSecret()),
           new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
       HTTPResponse response = request.toHTTPRequest().send();
       LOGGER.debug("Token response content: {}", response.getContent());
-      tokenResponse = OIDCTokenResponseParser.parse(response);
+      return OIDCTokenResponseParser.parse(response);
     } catch (URISyntaxException | ParseException e) {
       throw new IllegalStateException("Retrieving access token failed", e);
     } catch (IOException e) {
       throw new IllegalStateException("Retrieving access token failed: "
           + "Identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties'");
     }
-    return tokenResponse;
   }
 
   protected UserInfoResponse getUserInfoResponse(BearerAccessToken accessToken) {
-    UserInfoResponse userInfoResponse;
     try {
-      UserInfoRequest request = new UserInfoRequest(getProviderMetadata().getUserInfoEndpointURI(), accessToken);
+      URI userInfoEndpointURI = getProviderMetadata().getUserInfoEndpointURI();
+      LOGGER.debug("Retrieving user info from {}", userInfoEndpointURI);
+      UserInfoRequest request = new UserInfoRequest(userInfoEndpointURI, accessToken);
       HTTPResponse response = request.toHTTPRequest().send();
       LOGGER.debug("UserInfo response content: {}", response.getContent());
-      userInfoResponse = UserInfoResponse.parse(response);
+      return UserInfoResponse.parse(response);
     } catch (ParseException e) {
       throw new IllegalStateException("Retrieving user information failed", e);
     } catch (IOException e) {
       throw new IllegalStateException("Retrieving user information failed: "
           + "Identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties'");
     }
-    return userInfoResponse;
   }
 
-  private OIDCProviderMetadata getProviderMetadata() {
-    OIDCProviderMetadata providerMetadata;
+  protected OIDCProviderMetadata getProviderMetadata() {
+    LOGGER.debug("Retrieving provider metadata from {}", config.issuerUri());
     try {
-      providerMetadata = OIDCProviderMetadata.parse(config.providerConfiguration());
-    } catch (ParseException e) {
-      throw new IllegalStateException("Invalid OpenID Connect provider configuration", e);
+      return OIDCProviderMetadata.resolve(new Issuer(config.issuerUri()));
+    } catch (IOException | GeneralException e) {
+      throw new IllegalStateException("Retrieving OpenID Connect provider metadata failed", e);
     }
-    return providerMetadata;
   }
 
   private Scope getScope() {

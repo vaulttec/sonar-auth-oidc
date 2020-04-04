@@ -51,13 +51,16 @@ public class IntegrationTest extends AbstractOidcTest {
   public MockWebServer idp = new MockWebServer();
   private String idpUri = format("http://%s:%d", idp.getHostName(), idp.getPort());
 
-  OidcClient oidcClient = new OidcClient(config);
-  UserIdentityFactory userIdentityFactory = new UserIdentityFactory(config);
-  OidcIdentityProvider underTest = new OidcIdentityProvider(config, oidcClient, userIdentityFactory);
+  private OidcClient oidcClient;
+  private UserIdentityFactory userIdentityFactory;
+  private OidcIdentityProvider underTest;
 
   @Before
-  public void enableSettings() {
+  public void init() {
     setSettings(true, idpUri);
+    oidcClient = createSpyOidcClient();
+    userIdentityFactory = new UserIdentityFactory(config);
+    underTest = new OidcIdentityProvider(config, oidcClient, userIdentityFactory);
   }
 
   /**

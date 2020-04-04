@@ -50,11 +50,9 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
 
   @Test
   public void is_enabled() throws Exception {
-    settings.setProperty("sonar.auth.oidc.providerConfiguration", "{}");
-    settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
-    settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-    settings.setProperty("sonar.auth.oidc.issuerUri", ISSUER_URI);
     settings.setProperty("sonar.auth.oidc.enabled", true);
+    settings.setProperty("sonar.auth.oidc.issuerUri", ISSUER_URI);
+    settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
     assertThat(underTest.isEnabled()).isTrue();
 
     settings.setProperty("sonar.auth.oidc.enabled", false);

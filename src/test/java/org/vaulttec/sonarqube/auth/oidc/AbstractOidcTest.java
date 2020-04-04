@@ -17,11 +17,16 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_DEFAULT_VALUE;
 
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 import org.sonar.api.config.internal.MapSettings;
+
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 
 public abstract class AbstractOidcTest {
 
@@ -43,10 +48,9 @@ public abstract class AbstractOidcTest {
   protected void setSettings(boolean enabled, String issuerUri) {
     if (enabled) {
       settings.setProperty("sonar.auth.oidc.enabled", true);
-      settings.setProperty("sonar.auth.oidc.providerConfiguration", getProviderConfiguration(issuerUri));
+      settings.setProperty("sonar.auth.oidc.issuerUri", issuerUri);
       settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
       settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-      settings.setProperty("sonar.auth.oidc.issuerUri", "http://localhost/auth/sso");
       settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
       settings.setProperty("sonar.auth.oidc.groupsSync", true);
       settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "myGroups");
@@ -56,24 +60,34 @@ public abstract class AbstractOidcTest {
     }
   }
 
-  protected String getProviderConfiguration(String issuerUri) {
-    return "{\"issuer\":\"" + issuerUri + "\"," + "\"authorization_endpoint\":\"" + issuerUri
-        + "/protocol/openid-connect/auth" + "\"," + "\"token_endpoint\":\"" + issuerUri
-        + "/protocol/openid-connect/token\"," + "\"userinfo_endpoint\":\"" + issuerUri
-        + "/protocol/openid-connect/userinfo\"," + "\"jwks_uri\":\"" + issuerUri + "/protocol/openid-connect/certs\","
-        + "\"grant_types_supported\":[\"authorization_code\",\"implicit\",\"refresh_token\",\"password\",\"client_credentials\"],"
-        + "\"response_types_supported\":[\"code\",\"none\",\"id_token\",\"token\",\"id_token token\",\"code id_token\",\"code token\",\"code id_token token\"],"
-        + "\"subject_types_supported\":[\"public\",\"pairwise\"],"
-        + "\"id_token_signing_alg_values_supported\":[\"RS256\"],"
-        + "\"userinfo_signing_alg_values_supported\":[\"RS256\"],"
-        + "\"request_object_signing_alg_values_supported\":[\"none\",\"RS256\"],"
-        + "\"response_modes_supported\":[\"query\",\"fragment\",\"form_post\"],"
-        + "\"token_endpoint_auth_methods_supported\":[\"private_key_jwt\",\"client_secret_basic\",\"client_secret_post\"],"
-        + "\"token_endpoint_auth_signing_alg_values_supported\":[\"RS256\"],"
-        + "\"claims_supported\":[\"sub\",\"iss\",\"auth_time\",\"name\",\"given_name\",\"family_name\",\"preferred_username\",\"email\"],"
-        + "\"claim_types_supported\":[\"normal\"]," + "\"claims_parameter_supported\":false,"
-        + "\"scopes_supported\":[\"openid\",\"offline_access\"]," + "\"request_parameter_supported\":true,"
-        + "\"request_uri_parameter_supported\":true}";
+  protected OIDCProviderMetadata getProviderMetadata(String issuerUri) {
+    try {
+      return OIDCProviderMetadata.parse("{\"issuer\":\"" + issuerUri + "\"," + "\"authorization_endpoint\":\""
+          + issuerUri + "/protocol/openid-connect/auth" + "\"," + "\"token_endpoint\":\"" + issuerUri
+          + "/protocol/openid-connect/token\"," + "\"userinfo_endpoint\":\"" + issuerUri
+          + "/protocol/openid-connect/userinfo\"," + "\"jwks_uri\":\"" + issuerUri + "/protocol/openid-connect/certs\","
+          + "\"grant_types_supported\":[\"authorization_code\",\"implicit\",\"refresh_token\",\"password\",\"client_credentials\"],"
+          + "\"response_types_supported\":[\"code\",\"none\",\"id_token\",\"token\",\"id_token token\",\"code id_token\",\"code token\",\"code id_token token\"],"
+          + "\"subject_types_supported\":[\"public\",\"pairwise\"],"
+          + "\"id_token_signing_alg_values_supported\":[\"RS256\"],"
+          + "\"userinfo_signing_alg_values_supported\":[\"RS256\"],"
+          + "\"request_object_signing_alg_values_supported\":[\"none\",\"RS256\"],"
+          + "\"response_modes_supported\":[\"query\",\"fragment\",\"form_post\"],"
+          + "\"token_endpoint_auth_methods_supported\":[\"private_key_jwt\",\"client_secret_basic\",\"client_secret_post\"],"
+          + "\"token_endpoint_auth_signing_alg_values_supported\":[\"RS256\"],"
+          + "\"claims_supported\":[\"sub\",\"iss\",\"auth_time\",\"name\",\"given_name\",\"family_name\",\"preferred_username\",\"email\"],"
+          + "\"claim_types_supported\":[\"normal\"]," + "\"claims_parameter_supported\":false,"
+          + "\"scopes_supported\":[\"openid\",\"offline_access\"]," + "\"request_parameter_supported\":true,"
+          + "\"request_uri_parameter_supported\":true}");
+    } catch (ParseException e) {
+      throw new IllegalStateException("Invalid provider metadata", e);
+    }
+  }
+
+  protected OidcClient createSpyOidcClient() {
+    OidcClient client = spy(new OidcClient(config));
+    doReturn(getProviderMetadata(config.issuerUri())).when(client).getProviderMetadata();
+    return client;
   }
 
 }

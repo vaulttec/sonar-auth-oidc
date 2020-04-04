@@ -23,7 +23,6 @@ import static org.sonar.api.CoreProperties.CATEGORY_SECURITY;
 import static org.sonar.api.PropertyType.BOOLEAN;
 import static org.sonar.api.PropertyType.SINGLE_SELECT_LIST;
 import static org.sonar.api.PropertyType.STRING;
-import static org.sonar.api.PropertyType.TEXT;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,10 +40,10 @@ public class OidcConfiguration {
   private static final String SUBCATEGORY = "oidc";
 
   private static final String ENABLED = "sonar.auth.oidc.enabled";
-  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
-  private static final String PROVIDER_CONFIGURATION = "sonar.auth.oidc.providerConfiguration";
+  private static final String ISSUER_URI = "sonar.auth.oidc.issuerUri";
   private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
   private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
+  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
 
   private static final String SCOPES = "sonar.auth.oidc.scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
@@ -80,12 +79,12 @@ public class OidcConfiguration {
   }
 
   public boolean isEnabled() {
-    return config.getBoolean(ENABLED).orElse(false) && providerConfiguration() != null && clientId() != null;
+    return config.getBoolean(ENABLED).orElse(false) && issuerUri() != null && clientId() != null;
   }
 
   @CheckForNull
-  public String providerConfiguration() {
-    return config.get(PROVIDER_CONFIGURATION).orElse(null);
+  public String issuerUri() {
+    return config.get(ISSUER_URI).orElse(null);
   }
 
   @CheckForNull
@@ -141,10 +140,10 @@ public class OidcConfiguration {
                 "Enable OpenID Connect users to login. Value is ignored if client ID and secret are not defined.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
             .build(),
-        PropertyDefinition.builder(PROVIDER_CONFIGURATION).name("OpenID Connect Provider configuration")
-            .description("The endpoint configuration of an OpenID Connect provider."
-                + " This metadata is retrived from the provider in JSON format via the path \"/.well-known/openid-configuration\".")
-            .category(CATEGORY).subCategory(SUBCATEGORY).type(TEXT).index(index++).build(),
+        PropertyDefinition.builder(ISSUER_URI).name("Issuer URI")
+            .description("The issuer URI of an OpenID Connect provider."
+                + " This URI is used to retrieve the provider's metadata via OpenID Connect Discovery from the path \"/.well-known/openid-configuration\".")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
         PropertyDefinition.builder(CLIENT_ID).name("Client ID").description("The ID of an OpenID Connect Client.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
         PropertyDefinition.builder(CLIENT_SECRET).name("Client secret")
