@@ -65,7 +65,7 @@ public class OidcConfigurationTest {
   }
 
   @Test
-  public void configure_provider_uri() throws Exception {
+  public void configure_issuer_uri() throws Exception {
     settings.setProperty("sonar.auth.oidc.issuerUri", "https://auth.acme.com");
 
     assertThat(underTest.issuerUri()).isEqualTo("https://auth.acme.com");
