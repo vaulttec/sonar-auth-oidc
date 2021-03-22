@@ -128,7 +128,8 @@ public class OidcClient {
       throw new IllegalStateException("Parsing ID token failed", e);
     }
 
-    if ((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) {
+    if (((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) ||
+        userInfo.getClaim(config.syncGroupsClaimName()) == null) {
       UserInfoResponse userInfoResponse = getUserInfoResponse(oidcTokens.getBearerAccessToken());
       if (userInfoResponse instanceof UserInfoErrorResponse) {
         ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
