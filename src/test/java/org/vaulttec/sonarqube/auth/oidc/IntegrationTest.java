@@ -33,13 +33,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.nimbusds.common.contenttype.ContentType;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.sonar.api.server.authentication.OAuth2IdentityProvider;
 import org.sonar.api.server.authentication.UserIdentity;
-
-import com.nimbusds.oauth2.sdk.http.CommonContentTypes;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -131,7 +131,7 @@ public class IntegrationTest extends AbstractOidcTest {
 
   @Test
   public void callback_throws_ISE_if_error_when_requesting_id_token() throws InterruptedException {
-    idp.enqueue(new MockResponse().addHeader("Content-Type", CommonContentTypes.APPLICATION_JSON).setResponseCode(500)
+    idp.enqueue(new MockResponse().addHeader("Content-Type", ContentType.APPLICATION_JSON).setResponseCode(500)
         .setBody("{\"error\":\"invalid_grant\",\"error_description\":\"Invalid resource owner credentials\"}"));
     DumbCallbackContext callbackContext = new DumbCallbackContext(newAuthenticationRequest());
 
