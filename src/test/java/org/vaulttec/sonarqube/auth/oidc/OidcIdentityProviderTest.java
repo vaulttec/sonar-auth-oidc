@@ -18,6 +18,9 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,10 +28,10 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+
 import org.junit.Test;
 import org.sonar.api.server.authentication.OAuth2IdentityProvider;
-
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 
 public class OidcIdentityProviderTest extends AbstractOidcTest {
 
@@ -86,9 +89,8 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
     setSettings(false);
     OAuth2IdentityProvider.InitContext context = mock(OAuth2IdentityProvider.InitContext.class);
 
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("OpenID Connect authentication is disabled");
-    underTest.init(context);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.init(context));
+    assertTrue(exception.getMessage().contains("OpenID Connect authentication is disabled"));
   }
 
   private OidcClient newMockClient() {

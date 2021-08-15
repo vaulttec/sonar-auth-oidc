@@ -18,24 +18,20 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.internal.MapSettings;
-import org.sonar.api.server.authentication.UserIdentity;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 
-public class UserIdentityFactoryTest {
+import org.junit.Test;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.internal.MapSettings;
+import org.sonar.api.server.authentication.UserIdentity;
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+public class UserIdentityFactoryTest {
 
   MapSettings settings = new MapSettings(new PropertyDefinitions(OidcConfiguration.definitions()));
   UserIdentityFactory underTest = new UserIdentityFactory(new OidcConfiguration(settings.asConfig()));
@@ -122,9 +118,8 @@ public class UserIdentityFactoryTest {
     UserInfo userInfo = newUserInfo();
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, "xxx");
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage("Login strategy not supported: xxx");
-    underTest.create(userInfo);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().contains("Login strategy not supported: xxx"));
   }
 
   @Test
@@ -133,9 +128,8 @@ public class UserIdentityFactoryTest {
     userInfo.setPreferredUsername(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage(startsWith("Claim 'preferred_username' is missing in user info"));
-    underTest.create(userInfo);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().startsWith("Claim 'preferred_username' is missing in user info"));
   }
 
   @Test
@@ -144,9 +138,8 @@ public class UserIdentityFactoryTest {
     userInfo.setEmailAddress(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage(startsWith("Claim 'email' is missing in user info"));
-    underTest.create(userInfo);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().startsWith("Claim 'email' is missing in user info"));
   }
 
   @Test
@@ -156,9 +149,8 @@ public class UserIdentityFactoryTest {
     userInfo.setPreferredUsername(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage(startsWith("Claims 'name' and 'preferred_username' are missing in user info"));
-    underTest.create(userInfo);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().startsWith("Claims 'name' and 'preferred_username' are missing in user info"));
   }
 
   @Test
@@ -166,9 +158,8 @@ public class UserIdentityFactoryTest {
     UserInfo userInfo = newUserInfo();
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
 
-    expectedException.expect(IllegalStateException.class);
-    expectedException.expectMessage(startsWith("Custom claim 'upn' is missing in user info"));
-    underTest.create(userInfo);
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().startsWith("Custom claim 'upn' is missing in user info"));
   }
 
   @Test

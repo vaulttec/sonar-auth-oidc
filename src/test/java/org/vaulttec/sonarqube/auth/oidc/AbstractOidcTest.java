@@ -21,12 +21,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_DEFAULT_VALUE;
 
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
-import org.sonar.api.config.internal.MapSettings;
-
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+
+import org.sonar.api.config.internal.MapSettings;
 
 public abstract class AbstractOidcTest {
 
@@ -34,9 +32,6 @@ public abstract class AbstractOidcTest {
   public static final String CALLBACK_URL = "http://localhost/callback";
   public static final String STATE = "state";
   public static final String VALID_CODE = "valid_code";
-
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
 
   protected MapSettings settings = new MapSettings();
   protected OidcConfiguration config = new OidcConfiguration(settings.asConfig());
