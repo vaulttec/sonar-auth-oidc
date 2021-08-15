@@ -1,4 +1,4 @@
-name: Build with Maven and SonarCloud scan
+name: Build
 
 on:
   push:
