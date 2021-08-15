@@ -1,5 +1,5 @@
 # OpenID Connect (OIDC) Plugin for SonarQube
-[![Build Status](https://api.travis-ci.org/vaulttec/sonar-auth-oidc.svg)](https://travis-ci.org/vaulttec/sonar-auth-oidc) [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=org.vaulttec.sonarqube.auth.oidc%3Asonar-auth-oidc-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.vaulttec.sonarqube.auth.oidc%3Asonar-auth-oidc-plugin) [![Release](https://img.shields.io/github/release/vaulttec/sonar-auth-oidc.svg)](https://github.com/vaulttec/sonar-auth-oidc/releases/latest)
+[![Build Status](https://github.com/vaulttec/sonar-auth-oidc/actions/workflows/build.yml/badge.svg)](https://github.com/vaulttec/sonar-auth-oidc/actions/workflows/build.yml) [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=org.vaulttec.sonarqube.auth.oidc%3Asonar-auth-oidc-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=org.vaulttec.sonarqube.auth.oidc%3Asonar-auth-oidc-plugin) [![Release](https://img.shields.io/github/release/vaulttec/sonar-auth-oidc.svg)](https://github.com/vaulttec/sonar-auth-oidc/releases/latest)
 
 ## Description
 
