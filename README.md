@@ -12,10 +12,16 @@ Optionally the groups a user is associated in SonarQube can be synchronized with
 
 ### Server Base URL
 
-`Server base URL` property must be set either by setting the
-URL from SonarQube administration page (General -\> Server base URL).
+SonarQube's `Server base URL` property must be set either by setting the
+URL from SonarQube administration page (General -\> Server base URL) or the property `sonar.core.serverBaseURL` in the `sonar.properties`.
 
 **In this URL no trailing slash is allowed!** Otherwise the redirects from the identity provider back to the SonarQube server are not created correctly.
+
+### Force user authentication
+
+If the plugin's Auto-Login feature is enabled then SonarQube's `Force user authentication` property must be enabled either from SonarQube administration page (Security -\> Force user authentication) or the property `sonar.forceAuthentication` in the `sonar.properties`.
+
+**Otherwise the plugin won't be able to automatically redirect to the IdP's login page.**
 
 ### Network Proxy
 
@@ -46,11 +52,15 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
   - Configure the plugin for the OpenID Connect client (a client secret is only required for clients with access type 'confidential')
     ![SonarQube Plugin Configuration](docs/images/plugin-config.png)
 
+  - If Auto-Login is enabled then the logout from SonarQube is not possible anymore. This is because logout redirects to SonarQube's login page which triggers the Auto-Login.
+
+    **To skip Auto-Login use the URL `<sonarServerBaseURL>/?auto-login=false` in a new browser session (without cookie from previous SonarQube login).**
+
   - For synchronizing groups the name of the custom userinfo claim must be the same as defined in the identity provider's mapper
 
 ## Tested with
 
-* SonarQube 7.9.1, 8.2
-* Keycloak 4.8.1.Final
+* SonarQube 7.9.1, 8.2, 8.5.1
+* Keycloak 4.8.1.Final, 12.0.4
 * JetBrains Hub 2017.4
 * Okta 2018.25

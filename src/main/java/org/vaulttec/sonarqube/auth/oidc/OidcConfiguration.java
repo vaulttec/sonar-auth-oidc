@@ -26,9 +26,11 @@ import static org.sonar.api.PropertyType.STRING;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.CheckForNull;
 
+import org.sonar.api.CoreProperties;
 import org.sonar.api.config.Configuration;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.server.ServerSide;
@@ -37,18 +39,19 @@ import org.sonar.api.server.ServerSide;
 public class OidcConfiguration {
 
   private static final String CATEGORY = CATEGORY_SECURITY;
-  private static final String SUBCATEGORY = "oidc";
+  private static final String SUBCATEGORY = OidcIdentityProvider.KEY;
 
-  private static final String ENABLED = "sonar.auth.oidc.enabled";
-  private static final String ISSUER_URI = "sonar.auth.oidc.issuerUri";
-  private static final String CLIENT_ID = "sonar.auth.oidc.clientId.secured";
-  private static final String CLIENT_SECRET = "sonar.auth.oidc.clientSecret.secured";
-  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth.oidc.allowUsersToSignUp";
+  private static final String ENABLED = "sonar.auth." + OidcIdentityProvider.KEY + ".enabled";
+  private static final String AUTO_LOGIN = "sonar.auth." + OidcIdentityProvider.KEY + ".autoLogin";
+  private static final String ISSUER_URI = "sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri";
+  private static final String CLIENT_ID = "sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured";
+  private static final String CLIENT_SECRET = "sonar.auth." + OidcIdentityProvider.KEY + ".clientSecret.secured";
+  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp";
 
-  private static final String SCOPES = "sonar.auth.oidc.scopes";
+  private static final String SCOPES = "sonar.auth." + OidcIdentityProvider.KEY + ".scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
 
-  static final String LOGIN_STRATEGY = "sonar.auth.oidc.loginStrategy";
+  static final String LOGIN_STRATEGY = "sonar.auth." + OidcIdentityProvider.KEY + ".loginStrategy";
   static final String LOGIN_STRATEGY_UNIQUE = "Unique";
   static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
   static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
@@ -56,20 +59,22 @@ public class OidcConfiguration {
   static final String LOGIN_STRATEGY_CUSTOM_CLAIM = "Custom claim";
   static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
-  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME = "sonar.auth.oidc.loginStrategy.customClaim.name";
+  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME = "sonar.auth." + OidcIdentityProvider.KEY
+      + ".loginStrategy.customClaim.name";
   private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME_DEFAULT_VALUE = "upn";
 
-  private static final String GROUPS_SYNC = "sonar.auth.oidc.groupsSync";
-  private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth.oidc.groupsSync.claimName";
+  private static final String GROUPS_SYNC = "sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync";
+  private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth." + OidcIdentityProvider.KEY
+      + ".groupsSync.claimName";
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
 
-  private static final String ICON_PATH = "sonar.auth.oidc.iconPath";
+  private static final String ICON_PATH = "sonar.auth." + OidcIdentityProvider.KEY + ".iconPath";
   private static final String ICON_PATH_DEFAULT_VALUE = "/static/authoidc/openid.svg";
 
-  private static final String BACKGROUND_COLOR = "sonar.auth.oidc.backgroundColor";
+  private static final String BACKGROUND_COLOR = "sonar.auth." + OidcIdentityProvider.KEY + ".backgroundColor";
   private static final String BACKGROUND_COLOR_DEFAULT_VALUE = "#236a97";
 
-  private static final String LOGIN_BUTTON_TEXT = "sonar.auth.oidc.loginButtonText";
+  private static final String LOGIN_BUTTON_TEXT = "sonar.auth." + OidcIdentityProvider.KEY + ".loginButtonText";
   private static final String LOGIN_BUTTON_TEXT_DEFAULT_VALUE = "OpenID Connect";
 
   private final Configuration config;
@@ -78,8 +83,21 @@ public class OidcConfiguration {
     this.config = config;
   }
 
+  public String getBaseUrl() {
+
+    Optional<String> baseUrl = config.get(CoreProperties.SERVER_BASE_URL);
+    if (baseUrl.isPresent()) {
+      return baseUrl.get();
+    }
+    return "";
+  }
+
   public boolean isEnabled() {
     return config.getBoolean(ENABLED).orElse(false) && issuerUri() != null && clientId() != null;
+  }
+
+  public boolean isAutoLogin() {
+    return config.getBoolean(AUTO_LOGIN).orElse(false);
   }
 
   @CheckForNull
@@ -136,13 +154,17 @@ public class OidcConfiguration {
     int index = 1;
     return Arrays.asList(
         PropertyDefinition.builder(ENABLED).name("Enabled")
-            .description(
-                "Enable OpenID Connect users to login. Value is ignored if client ID and secret are not defined.")
+            .description("Enable OpenID Connect users to login. "
+                + "Value is ignored if client ID and secret are not defined.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
             .build(),
+        PropertyDefinition.builder(AUTO_LOGIN).name("Auto-Login")
+            .description("Skip the SonarQube login page and forward to OpenID Connect authentication. "
+                + "Auto-Login can be skipped by using the URL \"&lt;sonarServerBaseURL&gt;/?auto-login=false\".").category(CATEGORY)
+            .subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++).build(),
         PropertyDefinition.builder(ISSUER_URI).name("Issuer URI")
-            .description("The issuer URI of an OpenID Connect provider."
-                + " This URI is used to retrieve the provider's metadata via OpenID Connect Discovery from the path \"/.well-known/openid-configuration\".")
+            .description("The issuer URI of an OpenID Connect provider. "
+                + "This URI is used to retrieve the provider's metadata via OpenID Connect Discovery from the path \"/.well-known/openid-configuration\".")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
         PropertyDefinition.builder(CLIENT_ID).name("Client ID").description("The ID of an OpenID Connect Client.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).index(index++).build(),
@@ -154,8 +176,9 @@ public class OidcConfiguration {
             .description("OAuth scopes ('openid' is required) to pass in the Open ID Connect authorize request.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(SCOPES_DEFAULT_VALUE).index(index++)
             .build(),
-        PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up").description(
-            "Allow new users to authenticate. When set to 'false', only existing users will be able to authenticate to the server.")
+        PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up")
+            .description("Allow new users to authenticate. "
+                + "When set to 'false', only existing users will be able to authenticate to the server.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(true)).index(index++)
             .build(),
         PropertyDefinition.builder(LOGIN_STRATEGY).name("Login generation strategy").description(format(
@@ -195,7 +218,6 @@ public class OidcConfiguration {
         PropertyDefinition.builder(LOGIN_BUTTON_TEXT).name("Login button text")
             .description("The text in SonarQube's login button added to 'Log in with '.").category(CATEGORY)
             .subCategory(SUBCATEGORY).type(STRING).defaultValue(LOGIN_BUTTON_TEXT_DEFAULT_VALUE).index(index).build());
-
   }
 
 }

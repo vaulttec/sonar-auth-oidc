@@ -31,32 +31,39 @@ public class OidcConfigurationTest {
 
   @Test
   public void is_enabled() {
-    settings.setProperty("sonar.auth.oidc.issuerUri", "https://auth.acme.com");
-    settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
 
-    settings.setProperty("sonar.auth.oidc.enabled", true);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
     assertThat(underTest.isEnabled()).isTrue();
 
-    settings.setProperty("sonar.auth.oidc.enabled", false);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", false);
     assertThat(underTest.isEnabled()).isFalse();
   }
 
   @Test
   public void is_enabled_always_return_false_when_issuer_uri_is_null() {
-    settings.setProperty("sonar.auth.oidc.issuerUri", (String) null);
-    settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
-    settings.setProperty("sonar.auth.oidc.enabled", true);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", (String) null);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
 
     assertThat(underTest.isEnabled()).isFalse();
   }
 
   @Test
   public void is_enabled_always_return_false_when_client_id_is_null() {
-    settings.setProperty("sonar.auth.oidc.issuerUri", "https://auth.acme.com");
-    settings.setProperty("sonar.auth.oidc.clientId.secured", (String) null);
-    settings.setProperty("sonar.auth.oidc.enabled", true);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", (String) null);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
 
     assertThat(underTest.isEnabled()).isFalse();
+  }
+
+  @Test
+  public void is_auto_login() {
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".autoLogin", true);
+
+    assertThat(underTest.isAutoLogin()).isTrue();
   }
 
   @Test
@@ -66,81 +73,81 @@ public class OidcConfigurationTest {
 
   @Test
   public void configure_issuer_uri() throws Exception {
-    settings.setProperty("sonar.auth.oidc.issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
 
     assertThat(underTest.issuerUri()).isEqualTo("https://auth.acme.com");
   }
 
   @Test
   public void return_client_id() {
-    settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
     assertThat(underTest.clientId()).isEqualTo("id");
   }
 
   @Test
   public void return_client_secret() {
-    settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientSecret.secured", "secret");
     assertThat(underTest.clientSecret()).isEqualTo("secret");
   }
 
   @Test
   public void return_login_strategy() {
-    settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_PROVIDER_ID);
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".loginStrategy", LOGIN_STRATEGY_PROVIDER_ID);
     assertThat(underTest.loginStrategy()).isEqualTo(LOGIN_STRATEGY_PROVIDER_ID);
   }
 
   @Test
   public void allow_users_to_sign_up() {
-    settings.setProperty("sonar.auth.oidc.allowUsersToSignUp", "true");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp", "true");
     assertThat(underTest.allowUsersToSignUp()).isTrue();
 
-    settings.setProperty("sonar.auth.oidc.allowUsersToSignUp", "false");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp", "false");
     assertThat(underTest.allowUsersToSignUp()).isFalse();
   }
 
   @Test
   public void group_sync() {
-    settings.setProperty("sonar.auth.oidc.groupsSync", "true");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync", "true");
     assertThat(underTest.syncGroups()).isTrue();
 
-    settings.setProperty("sonar.auth.oidc.groupsSync", "false");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync", "false");
     assertThat(underTest.syncGroups()).isFalse();
   }
 
   @Test
   public void group_sync_claim_name() {
     assertThat(underTest.syncGroupsClaimName()).isEqualTo("groups");
-    settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "test");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync.claimName", "test");
     assertThat(underTest.syncGroupsClaimName()).isEqualTo("test");
   }
 
   @Test
   public void scopes() {
-    settings.setProperty("sonar.auth.oidc.scopes", "openid");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".scopes", "openid");
     assertThat(underTest.scopes()).isEqualTo("openid");
   }
 
   @Test
   public void icon_path() {
-    settings.setProperty("sonar.auth.oidc.iconPath", "http://mydomain.com/myicon.png");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".iconPath", "http://mydomain.com/myicon.png");
     assertThat(underTest.iconPath()).isEqualTo("http://mydomain.com/myicon.png");
   }
 
   @Test
   public void background_color() {
-    settings.setProperty("sonar.auth.oidc.backgroundColor", "#123456");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".backgroundColor", "#123456");
     assertThat(underTest.backgroundColor()).isEqualTo("#123456");
   }
 
   @Test
   public void login_button_text() {
-    settings.setProperty("sonar.auth.oidc.loginButtonText", "My Company Single-Sign-On");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".loginButtonText", "My Company Single-Sign-On");
     assertThat(underTest.loginButtonText()).isEqualTo("My Company Single-Sign-On");
   }
 
   @Test
   public void definitions() {
-    assertThat(OidcConfiguration.definitions()).hasSize(13);
+    assertThat(OidcConfiguration.definitions()).hasSize(14);
   }
 
 }
