@@ -23,10 +23,6 @@ import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.sonar.api.server.ServerSide;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
-
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -62,6 +58,10 @@ import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+
+import org.sonar.api.server.ServerSide;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 @ServerSide
 public class OidcClient {
@@ -128,8 +128,8 @@ public class OidcClient {
       throw new IllegalStateException("Parsing ID token failed", e);
     }
 
-    if (((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null)) ||
-        userInfo.getClaim(config.syncGroupsClaimName()) == null) {
+    if (((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null))
+        || (config.syncGroups() && userInfo.getClaim(config.syncGroupsClaimName()) == null)) {
       UserInfoResponse userInfoResponse = getUserInfoResponse(oidcTokens.getBearerAccessToken());
       if (userInfoResponse instanceof UserInfoErrorResponse) {
         ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();

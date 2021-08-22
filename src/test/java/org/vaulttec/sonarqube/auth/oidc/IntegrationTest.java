@@ -129,7 +129,6 @@ public class IntegrationTest extends AbstractOidcTest {
     assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
   }
 
-
   /**
    * Second phase: OpenID connect provider redirects browser to SonarQube at
    * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
@@ -298,7 +297,6 @@ public class IntegrationTest extends AbstractOidcTest {
     public HttpServletResponse getResponse() {
       return null;
     }
-
   }
 
 }
