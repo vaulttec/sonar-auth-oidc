@@ -27,9 +27,13 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 import org.sonar.api.web.ServletFilter;
 
 public class AutoLoginFilter extends ServletFilter {
+
+  private static final Logger LOGGER = Loggers.get(AutoLoginFilter.class);
 
   private static final String LOGIN_URL = "/sessions/new";
   private static final String OIDC_URL = "/sessions/init/" + OidcIdentityProvider.KEY + "?return_to=/projects";
@@ -52,9 +56,11 @@ public class AutoLoginFilter extends ServletFilter {
     if (config.isEnabled() && config.isAutoLogin()) {
       if (request instanceof HttpServletRequest) {
         String referrer = ((HttpServletRequest) request).getHeader("referer");
+        LOGGER.debug("Referrer: {}", referrer);
 
         // Skip if disabled via request parameter
         if (referrer == null || !referrer.endsWith(SKIP_REQUEST_PARAM)) {
+          LOGGER.debug("Redirecting to OIDC login page: {}", config.getBaseUrl() + OIDC_URL);
           ((HttpServletResponse) response).sendRedirect(config.getBaseUrl() + OIDC_URL);
           return;
         }
@@ -65,10 +71,12 @@ public class AutoLoginFilter extends ServletFilter {
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
+    // Not needed here
   }
 
   @Override
   public void destroy() {
+    // Not needed here
   }
 
 }
