@@ -58,6 +58,14 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
   - For synchronizing groups the name of the custom userinfo claim must be the same as defined in the identity provider's mapper
 
+## Troubleshooting
+
+To troubleshoot issues with this plugin activate [SonarQube's debug logging](https://docs.sonarqube.org/latest/instance-administration/system-info/) (Administration > System > Logs level) and download the Web Server log:
+![SonarQube System Logs](docs/images/sonarqube-system-logs.png)
+
+In the Web Server log file the plugin's log entries can be identified by the package name of it's Java classes `org.vaulttec.sonarqube.auth.oidc` which is abbreviated as `o.v.s.a.o`:
+![SonarQube Web Server Log Sample](docs/images/sonarqube-web-server-log-sample.png)
+
 ## Tested with
 
 * SonarQube 7.9.1, 8.2, 8.5.1
