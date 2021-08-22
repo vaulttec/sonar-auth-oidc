@@ -8,6 +8,8 @@ This plugin enables users to automatically be sign up and authenticated on a Son
 
 Optionally the groups a user is associated in SonarQube can be synchronized with the provider (via a custom userinfo claim retrieved from the ID token).
 
+For communicating with the OpenID Connect provider this plugin uses the [Nimbus OAuth 2.0 SDK with OpenID Connect extensions](https://connect2id.com/products/nimbus-oauth-openid-connect-sdk).
+
 ## Prerequisites
 
 ### Server Base URL
