@@ -38,25 +38,27 @@ import org.sonar.api.server.ServerSide;
 @ServerSide
 public class OidcConfiguration {
 
+  private static final String PREFIX = "sonar.auth." + OidcIdentityProvider.KEY;
+
   private static final String CATEGORY = CATEGORY_SECURITY;
   private static final String SUBCATEGORY = OidcIdentityProvider.KEY;
 
-  private static final String ENABLED = "sonar.auth." + OidcIdentityProvider.KEY + ".enabled";
-  private static final String AUTO_LOGIN = "sonar.auth." + OidcIdentityProvider.KEY + ".autoLogin";
-  private static final String ISSUER_URI = "sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri";
-  private static final String CLIENT_ID = "sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured";
-  private static final String CLIENT_SECRET = "sonar.auth." + OidcIdentityProvider.KEY + ".clientSecret.secured";
-  private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp";
+  private static final String ENABLED = PREFIX + ".enabled";
+  private static final String AUTO_LOGIN = PREFIX + ".autoLogin";
+  private static final String ISSUER_URI = PREFIX + ".issuerUri";
+  private static final String CLIENT_ID = PREFIX + ".clientId.secured";
+  private static final String CLIENT_SECRET = PREFIX + ".clientSecret.secured";
+  private static final String ALLOW_USERS_TO_SIGN_UP = PREFIX + ".allowUsersToSignUp";
 
-  static final String ID_TOKEN_SIG_ALG = "sonar.auth." + OidcIdentityProvider.KEY + ".idTokenSigAlg";
+  static final String ID_TOKEN_SIG_ALG = PREFIX + ".idTokenSigAlg";
   static final String ID_TOKEN_SIG_ALG_HMAC = "HS256";
   static final String ID_TOKEN_SIG_ALG_RSA = "RS256";
   static final String ID_TOKEN_SIG_ALG_ECDSA = "ES256";
 
-  private static final String SCOPES = "sonar.auth." + OidcIdentityProvider.KEY + ".scopes";
+  private static final String SCOPES = PREFIX + ".scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
 
-  static final String LOGIN_STRATEGY = "sonar.auth." + OidcIdentityProvider.KEY + ".loginStrategy";
+  static final String LOGIN_STRATEGY = PREFIX + ".loginStrategy";
   static final String LOGIN_STRATEGY_UNIQUE = "Unique";
   static final String LOGIN_STRATEGY_PROVIDER_ID = "Same as OpenID Connect login";
   static final String LOGIN_STRATEGY_PREFERRED_USERNAME = "Preferred username";
@@ -64,22 +66,20 @@ public class OidcConfiguration {
   static final String LOGIN_STRATEGY_CUSTOM_CLAIM = "Custom claim";
   static final String LOGIN_STRATEGY_DEFAULT_VALUE = LOGIN_STRATEGY_PREFERRED_USERNAME;
 
-  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME = "sonar.auth." + OidcIdentityProvider.KEY
-      + ".loginStrategy.customClaim.name";
+  private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME = PREFIX + ".loginStrategy.customClaim.name";
   private static final String LOGIN_STRATEGY_CUSTOM_CLAIM_NAME_DEFAULT_VALUE = "upn";
 
-  private static final String GROUPS_SYNC = "sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync";
-  private static final String GROUPS_SYNC_CLAIM_NAME = "sonar.auth." + OidcIdentityProvider.KEY
-      + ".groupsSync.claimName";
+  private static final String GROUPS_SYNC = PREFIX + ".groupsSync";
+  private static final String GROUPS_SYNC_CLAIM_NAME = PREFIX + ".groupsSync.claimName";
   private static final String GROUPS_SYNC_CLAIM_NAME_DEFAULT_VALUE = "groups";
 
-  private static final String ICON_PATH = "sonar.auth." + OidcIdentityProvider.KEY + ".iconPath";
+  private static final String ICON_PATH = PREFIX + ".iconPath";
   private static final String ICON_PATH_DEFAULT_VALUE = "/static/authoidc/openid.svg";
 
-  private static final String BACKGROUND_COLOR = "sonar.auth." + OidcIdentityProvider.KEY + ".backgroundColor";
+  private static final String BACKGROUND_COLOR = PREFIX + ".backgroundColor";
   private static final String BACKGROUND_COLOR_DEFAULT_VALUE = "#236a97";
 
-  private static final String LOGIN_BUTTON_TEXT = "sonar.auth." + OidcIdentityProvider.KEY + ".loginButtonText";
+  private static final String LOGIN_BUTTON_TEXT = PREFIX + ".loginButtonText";
   private static final String LOGIN_BUTTON_TEXT_DEFAULT_VALUE = "OpenID Connect";
 
   private final Configuration config;

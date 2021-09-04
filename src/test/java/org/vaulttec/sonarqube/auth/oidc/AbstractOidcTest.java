@@ -31,6 +31,8 @@ import org.sonar.api.config.internal.MapSettings;
 
 public abstract class AbstractOidcTest {
 
+  private static final String PREFIX = "sonar.auth." + OidcIdentityProvider.KEY;
+
   public static final String ISSUER_URI = "https://oidc.org";
   public static final String CALLBACK_URL = "http://localhost/callback";
   public static final String STATE = "state";
@@ -45,17 +47,17 @@ public abstract class AbstractOidcTest {
 
   protected void setSettings(boolean enabled, String issuerUri) {
     if (enabled) {
-      settings.setProperty("sonar.auth.oidc.enabled", true);
-      settings.setProperty("sonar.auth.oidc.issuerUri", issuerUri);
-      settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
-      settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
-      settings.setProperty("sonar.auth.oidc.idTokenSigAlg", "RS256");
-      settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
-      settings.setProperty("sonar.auth.oidc.groupsSync", true);
-      settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "myGroups");
-      settings.setProperty("sonar.auth.oidc.scopes", "openid email profile");
+      settings.setProperty(PREFIX + ".enabled", true);
+      settings.setProperty(PREFIX + ".issuerUri", issuerUri);
+      settings.setProperty(PREFIX + ".clientId.secured", "id");
+      settings.setProperty(PREFIX + ".clientSecret.secured", "secret");
+      settings.setProperty(PREFIX + ".idTokenSigAlg", "RS256");
+      settings.setProperty(PREFIX + ".loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
+      settings.setProperty(PREFIX + ".groupsSync", true);
+      settings.setProperty(PREFIX + ".groupsSync.claimName", "myGroups");
+      settings.setProperty(PREFIX + ".scopes", "openid email profile");
     } else {
-      settings.setProperty("sonar.auth.oidc.enabled", false);
+      settings.setProperty(PREFIX + ".enabled", false);
     }
   }
 
