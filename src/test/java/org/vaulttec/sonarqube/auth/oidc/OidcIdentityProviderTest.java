@@ -102,7 +102,7 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
     } catch (URISyntaxException e) {
       // ignore
     }
-    when(mockClient.getAuthenticationRequest(CALLBACK_URL, STATE)).thenReturn(request);
+    when(mockClient.createAuthenticationRequest(CALLBACK_URL, STATE)).thenReturn(request);
     return mockClient;
   }
 

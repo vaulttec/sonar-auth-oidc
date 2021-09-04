@@ -76,7 +76,7 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
       throw new IllegalStateException("OpenID Connect authentication is disabled");
     }
     String state = context.generateCsrfState();
-    AuthenticationRequest authenticationRequest = client.getAuthenticationRequest(context.getCallbackUrl(), state);
+    AuthenticationRequest authenticationRequest = client.createAuthenticationRequest(context.getCallbackUrl(), state);
     LOGGER.trace("Redirecting to authentication endpoint");
     context.redirectTo(authenticationRequest.toURI().toString());
   }

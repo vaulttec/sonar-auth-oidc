@@ -58,9 +58,9 @@ public class OidcClientTest extends AbstractOidcTest {
   private static final BearerAccessToken INVALID_BEARER_ACCESS_TOKEN = new BearerAccessToken("invalid");
 
   @Test
-  public void getAuthenticationRequest() throws URISyntaxException {
+  public void createAuthenticationRequest() throws URISyntaxException {
     OidcClient underTest = newSpyOidcClient();
-    AuthenticationRequest request = underTest.getAuthenticationRequest(CALLBACK_URL, STATE);
+    AuthenticationRequest request = underTest.createAuthenticationRequest(CALLBACK_URL, STATE);
     assertEquals("invalid scope", Scope.parse("openid profile email"), request.getScope());
     assertEquals("invalid client id", new ClientID("id"), request.getClientID());
     assertEquals("invalid state", new State(STATE), request.getState());
@@ -74,7 +74,7 @@ public class OidcClientTest extends AbstractOidcTest {
   public void invalidAuthenticationRequestUri() {
     OidcClient underTest = newSpyOidcClient();
     try {
-      underTest.getAuthenticationRequest(INVALID_URL, STATE);
+      underTest.createAuthenticationRequest(INVALID_URL, STATE);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException e) {
       assertEquals("Creating new authentication request failed", e.getMessage());

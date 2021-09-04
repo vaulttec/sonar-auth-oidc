@@ -18,6 +18,8 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.ID_TOKEN_SIG_ALG_RSA;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
 
 import org.junit.Test;
@@ -67,11 +69,6 @@ public class OidcConfigurationTest {
   }
 
   @Test
-  public void default_login_strategy_is_preferred_username() {
-    assertThat(underTest.loginStrategy()).isEqualTo(OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
-  }
-
-  @Test
   public void configure_issuer_uri() throws Exception {
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
 
@@ -91,9 +88,25 @@ public class OidcConfigurationTest {
   }
 
   @Test
+  public void return_id_token_sign_algorithm() {
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".idTokenSigAlg", ID_TOKEN_SIG_ALG_RSA);
+    assertThat(underTest.idTokenSignAlgorithm()).isEqualTo(ID_TOKEN_SIG_ALG_RSA);
+  }
+
+  @Test
+  public void default_id_token_sign_algorithm() {
+    assertThat(underTest.idTokenSignAlgorithm()).isEqualTo(null);
+  }
+
+  @Test
   public void return_login_strategy() {
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".loginStrategy", LOGIN_STRATEGY_PROVIDER_ID);
     assertThat(underTest.loginStrategy()).isEqualTo(LOGIN_STRATEGY_PROVIDER_ID);
+  }
+
+  @Test
+  public void default_login_strategy_is_preferred_username() {
+    assertThat(underTest.loginStrategy()).isEqualTo(LOGIN_STRATEGY_PREFERRED_USERNAME);
   }
 
   @Test
@@ -147,7 +160,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void definitions() {
-    assertThat(OidcConfiguration.definitions()).hasSize(14);
+    assertThat(OidcConfiguration.definitions()).hasSize(15);
   }
 
 }

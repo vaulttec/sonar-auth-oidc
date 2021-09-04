@@ -48,6 +48,12 @@ public class OidcConfiguration {
   private static final String CLIENT_SECRET = "sonar.auth." + OidcIdentityProvider.KEY + ".clientSecret.secured";
   private static final String ALLOW_USERS_TO_SIGN_UP = "sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp";
 
+  static final String ID_TOKEN_SIG_ALG = "sonar.auth." + OidcIdentityProvider.KEY + ".idTokenSigAlg";
+  static final String ID_TOKEN_SIG_ALG_HMAC = "HS256";
+  static final String ID_TOKEN_SIG_ALG_RSA = "RS256";
+  static final String ID_TOKEN_SIG_ALG_ECDSA = "ES256";
+  static final String ID_TOKEN_SIG_ALG_DEFAULT_VALUE = null;
+
   private static final String SCOPES = "sonar.auth." + OidcIdentityProvider.KEY + ".scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
 
@@ -118,6 +124,10 @@ public class OidcConfiguration {
     return config.get(SCOPES).orElse("openid");
   }
 
+  public String idTokenSignAlgorithm() {
+    return config.get(ID_TOKEN_SIG_ALG).orElse(null);
+  }
+
   public boolean allowUsersToSignUp() {
     return config.getBoolean(ALLOW_USERS_TO_SIGN_UP).orElse(false);
   }
@@ -154,14 +164,15 @@ public class OidcConfiguration {
     int index = 1;
     return Arrays.asList(
         PropertyDefinition.builder(ENABLED).name("Enabled")
-            .description("Enable OpenID Connect users to login. "
-                + "Value is ignored if client ID and secret are not defined.")
+            .description(
+                "Enable OpenID Connect users to login. " + "Value is ignored if client ID and secret are not defined.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
             .build(),
         PropertyDefinition.builder(AUTO_LOGIN).name("Auto-Login")
             .description("Skip the SonarQube login page and forward to OpenID Connect authentication. "
-                + "Auto-Login can be skipped by using the URL \"&lt;sonarServerBaseURL&gt;/?auto-login=false\".").category(CATEGORY)
-            .subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++).build(),
+                + "Auto-Login can be skipped by using the URL \"&lt;sonarServerBaseURL&gt;/?auto-login=false\".")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
+            .build(),
         PropertyDefinition.builder(ISSUER_URI).name("Issuer URI")
             .description("The issuer URI of an OpenID Connect provider. "
                 + "This URI is used to retrieve the provider's metadata via OpenID Connect Discovery from the path \"/.well-known/openid-configuration\".")
@@ -176,6 +187,12 @@ public class OidcConfiguration {
             .description("OAuth scopes ('openid' is required) to pass in the Open ID Connect authorize request.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(STRING).defaultValue(SCOPES_DEFAULT_VALUE).index(index++)
             .build(),
+        PropertyDefinition.builder(ID_TOKEN_SIG_ALG).name("ID token signature algorithm")
+            .description("If activated then the ID token is validated with the selected algorithm"
+                + " (HMAC, RSA or ECDSA - using SHA-256 hash)")
+            .category(CATEGORY).subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST)
+            .defaultValue(ID_TOKEN_SIG_ALG_DEFAULT_VALUE)
+            .options(ID_TOKEN_SIG_ALG_HMAC, ID_TOKEN_SIG_ALG_RSA, ID_TOKEN_SIG_ALG_ECDSA).index(index++).build(),
         PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up")
             .description("Allow new users to authenticate. "
                 + "When set to 'false', only existing users will be able to authenticate to the server.")
@@ -186,7 +203,7 @@ public class OidcConfiguration {
                 + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's internal user ID."
                 + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's user email."
                 + " When the login strategy is set to '%s', the provider login will be the OpenID Connect provider's user name."
-                + " When the login strategy is set to '%s', the provider login will be a custom claim in OpenID Connect provider's token.",
+                + " When the login strategy is set to '%s', the provider login will be a custom claim in OpenID Connect provider's ID token.",
             LOGIN_STRATEGY_UNIQUE, LOGIN_STRATEGY_PROVIDER_ID, LOGIN_STRATEGY_EMAIL, LOGIN_STRATEGY_PREFERRED_USERNAME,
             LOGIN_STRATEGY_CUSTOM_CLAIM)).category(CATEGORY).subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST)
             .defaultValue(LOGIN_STRATEGY_DEFAULT_VALUE)

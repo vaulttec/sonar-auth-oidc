@@ -18,11 +18,16 @@
 package org.vaulttec.sonarqube.auth.oidc;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.proc.BadJOSEException;
+import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -58,6 +63,7 @@ import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.utils.log.Logger;
@@ -75,8 +81,9 @@ public class OidcClient {
     this.config = config;
   }
 
-  public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
+  public AuthenticationRequest createAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
+    LOGGER.trace("Creating authentication request");
     OIDCProviderMetadata providerMetadata = getProviderMetadata();
     try {
       Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(),
@@ -90,7 +97,7 @@ public class OidcClient {
   }
 
   public AuthorizationCode getAuthorizationCode(HttpServletRequest callbackRequest) {
-    LOGGER.debug("Retrieving authorization code from callback request's query parameters: {}",
+    LOGGER.trace("Retrieving authorization code from callback request's query parameters: {}",
         callbackRequest.getQueryString());
     AuthenticationResponse authResponse = null;
     try {
@@ -109,6 +116,7 @@ public class OidcClient {
   }
 
   public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
+    LOGGER.trace("Getting user info for authorization code");
     OIDCProviderMetadata providerMetadata = getProviderMetadata();
     TokenResponse tokenResponse = getTokenResponse(providerMetadata.getTokenEndpointURI(), authorizationCode,
         callbackUrl);
@@ -121,15 +129,17 @@ public class OidcClient {
         throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
       }
     }
-
     OIDCTokens oidcTokens = ((OIDCTokenResponse) tokenResponse).getOIDCTokens();
+    if (isIdTokenSigned()) {
+      validateIdToken(providerMetadata.getIssuer(), providerMetadata.getJWKSetURI(), oidcTokens.getIDToken());
+    }
+
     UserInfo userInfo;
     try {
       userInfo = new UserInfo(oidcTokens.getIDToken().getJWTClaimsSet());
     } catch (java.text.ParseException e) {
       throw new IllegalStateException("Parsing ID token failed", e);
     }
-
     if (((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null))
         || (config.syncGroups() && userInfo.getClaim(config.syncGroupsClaimName()) == null)) {
       UserInfoResponse userInfoResponse = getUserInfoResponse(providerMetadata.getUserInfoEndpointURI(),
@@ -152,8 +162,8 @@ public class OidcClient {
 
   protected TokenResponse getTokenResponse(URI tokenEndpointURI, AuthorizationCode authorizationCode,
       String callbackUrl) {
+    LOGGER.trace("Retrieving OIDC tokens with user info claims set from {}", tokenEndpointURI);
     try {
-      LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}", tokenEndpointURI);
       TokenRequest request = new TokenRequest(tokenEndpointURI, new ClientSecretBasic(getClientId(), getClientSecret()),
           new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
       HTTPResponse response = request.toHTTPRequest().send();
@@ -167,9 +177,24 @@ public class OidcClient {
     }
   }
 
-  protected UserInfoResponse getUserInfoResponse(URI userInfoEndpointURI, BearerAccessToken accessToken) {
+  protected void validateIdToken(Issuer issuer, URI jwkSetURI, JWT idToken) {
+    LOGGER.trace("Validating ID token with {} and key set from from {}", getIdTokenSignAlgorithm(), jwkSetURI);
     try {
-      LOGGER.debug("Retrieving user info from {}", userInfoEndpointURI);
+      IDTokenValidator validator = new IDTokenValidator(issuer, getClientId(), getIdTokenSignAlgorithm(),
+          jwkSetURI.toURL());
+      validator.validate(idToken, null);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException("Invalid JWK set URL", e);
+    } catch (BadJOSEException e) {
+      throw new IllegalStateException("Invalid ID token", e);
+    } catch (JOSEException e) {
+      throw new IllegalStateException("Validating ID token failed", e);
+    }
+  }
+
+  protected UserInfoResponse getUserInfoResponse(URI userInfoEndpointURI, BearerAccessToken accessToken) {
+    LOGGER.trace("Retrieving user info from {}", userInfoEndpointURI);
+    try {
       UserInfoRequest request = new UserInfoRequest(userInfoEndpointURI, accessToken);
       HTTPResponse response = request.toHTTPRequest().send();
       LOGGER.debug("UserInfo response content: {}", response.getContent());
@@ -183,7 +208,7 @@ public class OidcClient {
   }
 
   protected OIDCProviderMetadata getProviderMetadata() {
-    LOGGER.debug("Retrieving provider metadata from {}", config.issuerUri());
+    LOGGER.trace("Retrieving provider metadata from {}", config.issuerUri());
     try {
       return OIDCProviderMetadata.resolve(new Issuer(config.issuerUri()));
     } catch (IOException | GeneralException e) {
@@ -202,6 +227,15 @@ public class OidcClient {
   private Secret getClientSecret() {
     String secret = config.clientSecret();
     return secret == null ? new Secret("") : new Secret(secret);
+  }
+
+  private boolean isIdTokenSigned() {
+    return config.idTokenSignAlgorithm() != null;
+  }
+
+  private JWSAlgorithm getIdTokenSignAlgorithm() {
+    String algorithmName = config.idTokenSignAlgorithm();
+    return algorithmName == null ? null : new JWSAlgorithm(algorithmName);
   }
 
 }
