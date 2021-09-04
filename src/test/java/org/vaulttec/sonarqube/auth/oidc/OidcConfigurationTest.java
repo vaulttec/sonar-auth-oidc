@@ -95,7 +95,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void default_id_token_sign_algorithm() {
-    assertThat(underTest.idTokenSignAlgorithm()).isEqualTo(null);
+    assertThat(underTest.idTokenSignAlgorithm()).isNull();;
   }
 
   @Test
