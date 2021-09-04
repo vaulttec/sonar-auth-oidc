@@ -52,7 +52,6 @@ public class OidcConfiguration {
   static final String ID_TOKEN_SIG_ALG_HMAC = "HS256";
   static final String ID_TOKEN_SIG_ALG_RSA = "RS256";
   static final String ID_TOKEN_SIG_ALG_ECDSA = "ES256";
-  static final String ID_TOKEN_SIG_ALG_DEFAULT_VALUE = null;
 
   private static final String SCOPES = "sonar.auth." + OidcIdentityProvider.KEY + ".scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
@@ -191,7 +190,6 @@ public class OidcConfiguration {
             .description("If activated then the ID token is validated with the selected algorithm"
                 + " (HMAC, RSA or ECDSA - using SHA-256 hash)")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(SINGLE_SELECT_LIST)
-            .defaultValue(ID_TOKEN_SIG_ALG_DEFAULT_VALUE)
             .options(ID_TOKEN_SIG_ALG_HMAC, ID_TOKEN_SIG_ALG_RSA, ID_TOKEN_SIG_ALG_ECDSA).index(index++).build(),
         PropertyDefinition.builder(ALLOW_USERS_TO_SIGN_UP).name("Allow users to sign-up")
             .description("Allow new users to authenticate. "
