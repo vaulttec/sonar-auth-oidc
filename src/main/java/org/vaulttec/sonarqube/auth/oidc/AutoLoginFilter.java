@@ -53,17 +53,15 @@ public class AutoLoginFilter extends ServletFilter {
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws IOException, ServletException {
-    if (config.isEnabled() && config.isAutoLogin()) {
-      if (request instanceof HttpServletRequest) {
-        String referrer = ((HttpServletRequest) request).getHeader("referer");
-        LOGGER.debug("Referrer: {}", referrer);
+    if (config.isEnabled() && config.isAutoLogin() && request instanceof HttpServletRequest) {
+      String referrer = ((HttpServletRequest) request).getHeader("referer");
+      LOGGER.debug("Referrer: {}", referrer);
 
-        // Skip if disabled via request parameter
-        if (referrer == null || !referrer.endsWith(SKIP_REQUEST_PARAM)) {
-          LOGGER.debug("Redirecting to OIDC login page: {}", config.getBaseUrl() + OIDC_URL);
-          ((HttpServletResponse) response).sendRedirect(config.getBaseUrl() + OIDC_URL);
-          return;
-        }
+      // Skip if disabled via request parameter
+      if (referrer == null || !referrer.endsWith(SKIP_REQUEST_PARAM)) {
+        LOGGER.debug("Redirecting to OIDC login page: {}", config.getBaseUrl() + OIDC_URL);
+        ((HttpServletResponse) response).sendRedirect(config.getBaseUrl() + OIDC_URL);
+        return;
       }
     }
     chain.doFilter(request, response);

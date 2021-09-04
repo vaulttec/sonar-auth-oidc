@@ -140,8 +140,9 @@ public class OidcClientTest extends AbstractOidcTest {
   @Test
   public void tokenErrorResponse() {
     OidcClient underTest = newSpyOidcClient();
+    AuthorizationCode authorizationCode = new AuthorizationCode(INVALID_CODE);
     try {
-      underTest.getUserInfo(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
+      underTest.getUserInfo(authorizationCode, CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException e) {
       assertEquals("Token request failed: {\"error\":\"invalid_request\"}", e.getMessage());
@@ -154,8 +155,9 @@ public class OidcClientTest extends AbstractOidcTest {
     TokenErrorResponse errorTokenResponse = new TokenErrorResponse(new ErrorObject(null));
     doReturn(errorTokenResponse).when(underTest).getTokenResponse(getProviderMetadata(ISSUER_URI).getTokenEndpointURI(),
         new AuthorizationCode("no_error"), CALLBACK_URL);
+    AuthorizationCode authorizationCode = new AuthorizationCode("no_error");
     try {
-      underTest.getUserInfo(new AuthorizationCode("no_error"), CALLBACK_URL);
+      underTest.getUserInfo(authorizationCode, CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException e) {
       assertEquals("Token request failed: No error code returned (identity provider not reachable - "
@@ -166,8 +168,9 @@ public class OidcClientTest extends AbstractOidcTest {
   @Test
   public void invalidTokenRequestUri() {
     OidcClient underTest = newSpyOidcClient();
+    AuthorizationCode authorizationCode = new AuthorizationCode(VALID_CODE);
     try {
-      underTest.getUserInfo(new AuthorizationCode(VALID_CODE), INVALID_URL);
+      underTest.getUserInfo(authorizationCode, INVALID_URL);
       failBecauseExceptionWasNotThrown(URISyntaxException.class);
     } catch (IllegalStateException e) {
       assertEquals("Retrieving access token failed", e.getMessage());
@@ -193,8 +196,9 @@ public class OidcClientTest extends AbstractOidcTest {
     UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject("some_error"));
     doReturn(userInfoResponse).when(underTest)
         .getUserInfoResponse(getProviderMetadata(ISSUER_URI).getUserInfoEndpointURI(), INVALID_BEARER_ACCESS_TOKEN);
+    AuthorizationCode authorizationCode = new AuthorizationCode(INVALID_CODE);
     try {
-      underTest.getUserInfo(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
+      underTest.getUserInfo(authorizationCode, CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException e) {
       assertEquals("UserInfo request failed: {\"error\":\"some_error\"}", e.getMessage());
@@ -207,8 +211,9 @@ public class OidcClientTest extends AbstractOidcTest {
     UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject(null));
     doReturn(userInfoResponse).when(underTest)
         .getUserInfoResponse(getProviderMetadata(ISSUER_URI).getUserInfoEndpointURI(), INVALID_BEARER_ACCESS_TOKEN);
+    AuthorizationCode authorizationCode = new AuthorizationCode(INVALID_CODE);
     try {
-      underTest.getUserInfo(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
+      underTest.getUserInfo(authorizationCode, CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
     } catch (IllegalStateException e) {
       assertEquals("UserInfo request failed: No error code returned "
