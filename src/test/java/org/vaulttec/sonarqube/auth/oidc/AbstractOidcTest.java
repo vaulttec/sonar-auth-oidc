@@ -17,12 +17,15 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_DEFAULT_VALUE;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
+import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 
 import org.sonar.api.config.internal.MapSettings;
 
@@ -46,6 +49,7 @@ public abstract class AbstractOidcTest {
       settings.setProperty("sonar.auth.oidc.issuerUri", issuerUri);
       settings.setProperty("sonar.auth.oidc.clientId.secured", "id");
       settings.setProperty("sonar.auth.oidc.clientSecret.secured", "secret");
+      settings.setProperty("sonar.auth.oidc.idTokenSigAlg", "RS256");
       settings.setProperty("sonar.auth.oidc.loginStrategy", LOGIN_STRATEGY_DEFAULT_VALUE);
       settings.setProperty("sonar.auth.oidc.groupsSync", true);
       settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "myGroups");
@@ -82,6 +86,7 @@ public abstract class AbstractOidcTest {
   protected OidcClient createSpyOidcClient() {
     OidcClient client = spy(new OidcClient(config));
     doReturn(getProviderMetadata(config.issuerUri())).when(client).getProviderMetadata();
+    doReturn(mock(IDTokenValidator.class)).when(client).createValidator(any(), any());
     return client;
   }
 

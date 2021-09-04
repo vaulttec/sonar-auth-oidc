@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -180,8 +181,7 @@ public class OidcClient {
   protected void validateIdToken(Issuer issuer, URI jwkSetURI, JWT idToken) {
     LOGGER.trace("Validating ID token with {} and key set from from {}", getIdTokenSignAlgorithm(), jwkSetURI);
     try {
-      IDTokenValidator validator = new IDTokenValidator(issuer, getClientId(), getIdTokenSignAlgorithm(),
-          jwkSetURI.toURL());
+      IDTokenValidator validator = createValidator(issuer, jwkSetURI.toURL());
       validator.validate(idToken, null);
     } catch (MalformedURLException e) {
       throw new IllegalStateException("Invalid JWK set URL", e);
@@ -190,6 +190,10 @@ public class OidcClient {
     } catch (JOSEException e) {
       throw new IllegalStateException("Validating ID token failed", e);
     }
+  }
+
+  protected IDTokenValidator createValidator(Issuer issuer, URL jwkSetUrl) {
+    return new IDTokenValidator(issuer, getClientId(), getIdTokenSignAlgorithm(), jwkSetUrl);
   }
 
   protected UserInfoResponse getUserInfoResponse(URI userInfoEndpointURI, BearerAccessToken accessToken) {
