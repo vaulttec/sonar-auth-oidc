@@ -31,9 +31,6 @@ import java.util.Collections;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.Test;
-import net.minidev.json.JSONObject;
-
 import com.nimbusds.jose.util.JSONObjectUtils;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -49,6 +46,10 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoErrorResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
+
+import org.junit.Test;
+
+import net.minidev.json.JSONObject;
 
 public class OidcClientTest extends AbstractOidcTest {
 
@@ -151,7 +152,8 @@ public class OidcClientTest extends AbstractOidcTest {
   public void tokenErrorResponseWithoutErrorCode() {
     OidcClient underTest = newSpyOidcClient();
     TokenErrorResponse errorTokenResponse = new TokenErrorResponse(new ErrorObject(null));
-    doReturn(errorTokenResponse).when(underTest).getTokenResponse(new AuthorizationCode("no_error"), CALLBACK_URL);
+    doReturn(errorTokenResponse).when(underTest).getTokenResponse(getProviderMetadata(ISSUER_URI).getTokenEndpointURI(),
+        new AuthorizationCode("no_error"), CALLBACK_URL);
     try {
       underTest.getUserInfo(new AuthorizationCode("no_error"), CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
@@ -189,7 +191,8 @@ public class OidcClientTest extends AbstractOidcTest {
   public void userInfoErrorResponse() {
     OidcClient underTest = newSpyOidcClientWithoutProfileInformation();
     UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject("some_error"));
-    doReturn(userInfoResponse).when(underTest).getUserInfoResponse(INVALID_BEARER_ACCESS_TOKEN);
+    doReturn(userInfoResponse).when(underTest)
+        .getUserInfoResponse(getProviderMetadata(ISSUER_URI).getUserInfoEndpointURI(), INVALID_BEARER_ACCESS_TOKEN);
     try {
       underTest.getUserInfo(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
@@ -202,7 +205,8 @@ public class OidcClientTest extends AbstractOidcTest {
   public void userInfoErrorResponseWithoutErrorCode() {
     OidcClient underTest = newSpyOidcClientWithoutProfileInformation();
     UserInfoErrorResponse userInfoResponse = new UserInfoErrorResponse(new ErrorObject(null));
-    doReturn(userInfoResponse).when(underTest).getUserInfoResponse(INVALID_BEARER_ACCESS_TOKEN);
+    doReturn(userInfoResponse).when(underTest)
+        .getUserInfoResponse(getProviderMetadata(ISSUER_URI).getUserInfoEndpointURI(), INVALID_BEARER_ACCESS_TOKEN);
     try {
       underTest.getUserInfo(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
       failBecauseExceptionWasNotThrown(IllegalStateException.class);
@@ -223,11 +227,13 @@ public class OidcClientTest extends AbstractOidcTest {
               + "\"scope\":\"\","
               + "\"id_token\":\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ3djY4UzUybDZTWVUxNGFfd0N3VElJT01WV1d1RXVXUFNBcERjYXo5Rnd3In0.eyJqdGkiOiIwYzdkNDQ0Yy1iM2MxLTQzM2YtODQ1OC1iYzRlYmQ4YjM4MGIiLCJleHAiOjE1MTQzMDcwNTQsIm5iZiI6MCwiaWF0IjoxNTE0MzA2NzU0LCJpc3MiOiJodHRwOi8vbWFjYm9vay1wcm8uZnJpdHouYm94OjgwODAvYXV0aC9yZWFsbXMvc3NvIiwiYXVkIjoic29uYXJxdWJlIiwic3ViIjoiYWZhYmE1OTItYWM4NS00Y2YxLThlYzYtMDA1OGQxNTdmODgyIiwidHlwIjoiSUQiLCJhenAiOiJzb25hcnF1YmUiLCJhdXRoX3RpbWUiOjE1MTQzMDY3NTQsInNlc3Npb25fc3RhdGUiOiJhYTY3Y2M2OS03YTA2LTQ3ZDEtYmEwMC02OTY0NmU2MGI4YmUiLCJhY3IiOiIxIiwibmFtZSI6IkpvaG4gRG9vIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiam9obi5kb28iLCJnaXZlbl9uYW1lIjoiSm9obiIsImZhbWlseV9uYW1lIjoiRG9vIiwiZW1haWwiOiJqb2huLmRvb0BhY21lLmNvbSJ9.UwqM6TGPrpMpK70FKxX9ZQWyUySjx7fxeV5IAT2PtzTH4xZKLJQbQmb4uD9z7o5azK5fgYc9xQfJKQX2y2euz-mtSdjueqkPAY-djQEc2kyvb-4Nd9Qc4Uiy19aAuooNdM-pAiYhfvyQQiGMRe3z68sq45mgfDpKMBcV-5bOJNafQ8tLLEonzT37-1GMfuAMv7ppx4HmdUDQccZ0D4nBqmeFRPcA3BghPZJ6eThR_mRsuYW1yZDg5tMle2cZe80mnIZSTW349cPwJFfmQDNT7XQBHHTCa6pYsBoqs2KYadOnbMSPCXZ-agd0DzffgtujsBvrUWV8tXSZ7axY34xMQQ\","
               + "\"token_type\":\"Bearer\",\"expires_in\":300}")));
-      doReturn(tokenResponse).when(client).getTokenResponse(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+      doReturn(tokenResponse).when(client).getTokenResponse(getProviderMetadata(ISSUER_URI).getTokenEndpointURI(),
+          new AuthorizationCode(VALID_CODE), CALLBACK_URL);
 
       TokenErrorResponse errorTokenResponse = TokenErrorResponse
           .parse(new JSONObject(JSONObjectUtils.parse("{\"error\":\"invalid_request\"}")));
-      doReturn(errorTokenResponse).when(client).getTokenResponse(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
+      doReturn(errorTokenResponse).when(client).getTokenResponse(getProviderMetadata(ISSUER_URI).getTokenEndpointURI(),
+          new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
 
       UserInfo userInfo = new UserInfo(tokenResponse.getOIDCTokens().getIDToken().getJWTClaimsSet());
       doReturn(userInfo).when(client).getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
@@ -245,20 +251,24 @@ public class OidcClientTest extends AbstractOidcTest {
           "{\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJzdWIiOiJlNjVjOTYwNy1mZDRlLTRiY2QtOTdiMS1jYTA1NzYxNjU5MGUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvaHViIiwiYXVkIjpbIjYwZGNhY2FmLThhOTQtNDE3Ny1iMmYyLTEzNDg0NjNmODhjZSJdLCJleHAiOjEuNTIzNTcyMTY3NTYxRTksImlhdCI6MS41MTU3OTYxNjc1OTdFOSwiYXV0aF90aW1lIjoxLjUxNTc5NjE2NzU2MUU5fQ.o_h3f6QK--p1Ru8pUquoLpvB1vdBCorUfdq_I8J_yBbjyPS4LUP9-e_xkXtql6yOSh9AewNUb7PSKnJOq-TlMMMlOr-Or676i1wT0hGQb2aKnzzFu7VYQOep8_6t-AQSXRhckaR5NIJnF6oxFWdTwhizcenO_Osf12R-PQOyQsA\","
               + "\"access_token\":\"1515799767598.60dcacaf-8a94-4177-b2f2-1348463f88ce.e65c9607-fd4e-4bcd-97b1-ca057616590e.0-0-0-0-0;1.MCwCFEjmjjDDL1yAQ+jYA+VxgYNNNr4hAhR66eAgXKfs6kOJehOALtRqw5wq9Q==\","
               + "\"token_type\":\"Bearer\"," + "\"expires_in\":3600," + "\"scope\":\"0-0-0-0-0\"}")));
-      doReturn(tokenResponse).when(client).getTokenResponse(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
+      doReturn(tokenResponse).when(client).getTokenResponse(getProviderMetadata(ISSUER_URI).getTokenEndpointURI(),
+          new AuthorizationCode(VALID_CODE), CALLBACK_URL);
 
       OIDCTokenResponse invalidTokenResponse = OIDCTokenResponse.parse(new JSONObject(JSONObjectUtils.parse(
           "{\"id_token\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6IjEifQ.eyJzdWIiOiJlNjVjOTYwNy1mZDRlLTRiY2QtOTdiMS1jYTA1NzYxNjU5MGUiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvaHViIiwiYXVkIjpbIjYwZGNhY2FmLThhOTQtNDE3Ny1iMmYyLTEzNDg0NjNmODhjZSJdLCJleHAiOjEuNTIzNTcyMTY3NTYxRTksImlhdCI6MS41MTU3OTYxNjc1OTdFOSwiYXV0aF90aW1lIjoxLjUxNTc5NjE2NzU2MUU5fQ.o_h3f6QK--p1Ru8pUquoLpvB1vdBCorUfdq_I8J_yBbjyPS4LUP9-e_xkXtql6yOSh9AewNUb7PSKnJOq-TlMMMlOr-Or676i1wT0hGQb2aKnzzFu7VYQOep8_6t-AQSXRhckaR5NIJnF6oxFWdTwhizcenO_Osf12R-PQOyQsA\","
               + "\"access_token\":\"invalid\"," + "\"token_type\":\"Bearer\"," + "\"expires_in\":3600,"
               + "\"scope\":\"0-0-0-0-0\"}")));
-      doReturn(invalidTokenResponse).when(client).getTokenResponse(new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
+      doReturn(invalidTokenResponse).when(client).getTokenResponse(
+          getProviderMetadata(ISSUER_URI).getTokenEndpointURI(), new AuthorizationCode(INVALID_CODE), CALLBACK_URL);
 
       UserInfoSuccessResponse userInfoResponse = new UserInfoSuccessResponse(
           new UserInfo(new JSONObject(JSONObjectUtils.parse("{\"sub\":\"e65c9607-fd4e-4bcd-97b1-ca057616590e\","
               + "\"name\":\"John Doo\",\"preferred_username\":\"john.doo\","
               + "\"profile\":\"http://localhost:8080/hub/users/e65c9607-fd4e-4bcd-97b1-ca057616590e\","
               + "\"email\":\"john.doo@acme.com\",\"email_verified\":true}"))));
-      doReturn(userInfoResponse).when(client).getUserInfoResponse(tokenResponse.getOIDCTokens().getBearerAccessToken());
+      doReturn(userInfoResponse).when(client).getUserInfoResponse(
+          getProviderMetadata(ISSUER_URI).getUserInfoEndpointURI(),
+          tokenResponse.getOIDCTokens().getBearerAccessToken());
 
       doCallRealMethod().when(client).getUserInfo(new AuthorizationCode(VALID_CODE), CALLBACK_URL);
     } catch (ParseException | java.text.ParseException e) {

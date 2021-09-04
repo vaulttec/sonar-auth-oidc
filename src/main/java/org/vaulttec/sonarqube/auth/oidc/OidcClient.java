@@ -77,11 +77,11 @@ public class OidcClient {
 
   public AuthenticationRequest getAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
+    OIDCProviderMetadata providerMetadata = getProviderMetadata();
     try {
       Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(),
           new URI(callbackUrl));
-      request = builder.endpointURI(getProviderMetadata().getAuthorizationEndpointURI()).state(State.parse(state))
-          .build();
+      request = builder.endpointURI(providerMetadata.getAuthorizationEndpointURI()).state(State.parse(state)).build();
     } catch (URISyntaxException e) {
       throw new IllegalStateException("Creating new authentication request failed", e);
     }
@@ -109,7 +109,9 @@ public class OidcClient {
   }
 
   public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
-    TokenResponse tokenResponse = getTokenResponse(authorizationCode, callbackUrl);
+    OIDCProviderMetadata providerMetadata = getProviderMetadata();
+    TokenResponse tokenResponse = getTokenResponse(providerMetadata.getTokenEndpointURI(), authorizationCode,
+        callbackUrl);
     if (tokenResponse instanceof TokenErrorResponse) {
       ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
       if (errorObject == null || errorObject.getCode() == null) {
@@ -130,7 +132,8 @@ public class OidcClient {
 
     if (((userInfo.getName() == null) && (userInfo.getPreferredUsername() == null))
         || (config.syncGroups() && userInfo.getClaim(config.syncGroupsClaimName()) == null)) {
-      UserInfoResponse userInfoResponse = getUserInfoResponse(oidcTokens.getBearerAccessToken());
+      UserInfoResponse userInfoResponse = getUserInfoResponse(providerMetadata.getUserInfoEndpointURI(),
+          oidcTokens.getBearerAccessToken());
       if (userInfoResponse instanceof UserInfoErrorResponse) {
         ErrorObject errorObject = ((UserInfoErrorResponse) userInfoResponse).getErrorObject();
         if (errorObject == null || errorObject.getCode() == null) {
@@ -147,9 +150,9 @@ public class OidcClient {
     return userInfo;
   }
 
-  protected TokenResponse getTokenResponse(AuthorizationCode authorizationCode, String callbackUrl) {
+  protected TokenResponse getTokenResponse(URI tokenEndpointURI, AuthorizationCode authorizationCode,
+      String callbackUrl) {
     try {
-      URI tokenEndpointURI = getProviderMetadata().getTokenEndpointURI();
       LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}", tokenEndpointURI);
       TokenRequest request = new TokenRequest(tokenEndpointURI, new ClientSecretBasic(getClientId(), getClientSecret()),
           new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
@@ -164,9 +167,8 @@ public class OidcClient {
     }
   }
 
-  protected UserInfoResponse getUserInfoResponse(BearerAccessToken accessToken) {
+  protected UserInfoResponse getUserInfoResponse(URI userInfoEndpointURI, BearerAccessToken accessToken) {
     try {
-      URI userInfoEndpointURI = getProviderMetadata().getUserInfoEndpointURI();
       LOGGER.debug("Retrieving user info from {}", userInfoEndpointURI);
       UserInfoRequest request = new UserInfoRequest(userInfoEndpointURI, accessToken);
       HTTPResponse response = request.toHTTPRequest().send();
