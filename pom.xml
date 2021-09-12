@@ -107,7 +107,15 @@
 					<target>${java.version}</target>
 				</configuration>
 			</plugin>
-			<!-- Disable deploy plugin and use GitHub deployment instead -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+	            <version>3.0.0-M4</version>
+	            <configuration>
+	                <tagNameFormat>v@{project.version}</tagNameFormat>
+	            </configuration>
+            </plugin>
+			<!-- Disable deploy plugin and use GitHub action instead -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
@@ -115,26 +123,6 @@
 				<configuration>
 					<skip>true</skip>
 				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>de.jutzig</groupId>
-				<artifactId>github-release-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-					<execution>
-						<id>github-upload</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>release</goal>
-						</goals>
-						<inherited>false</inherited>
-						<configuration>
-							<releaseName>v${project.version}</releaseName>
-							<tag>v${project.version}</tag>
-							<artifact>${project.build.directory}/${project.artifactId}-${project.version}.jar</artifact>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
