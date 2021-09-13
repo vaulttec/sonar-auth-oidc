@@ -40,8 +40,8 @@
 	</issueManagement>
 
 	<ciManagement>
-		<system>travis-ci</system>
-		<url>https://travis-ci.org/vaulttec/sonar-auth-oidc</url>
+		<system>github-actions</system>
+		<url>https://github.com/vaulttec/sonar-auth-oidc/actions</url>
 	</ciManagement>
 
 	<scm>
