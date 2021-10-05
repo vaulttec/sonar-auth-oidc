@@ -36,7 +36,6 @@ public class AutoLoginFilter extends ServletFilter {
   private static final Logger LOGGER = Loggers.get(AutoLoginFilter.class);
 
   private static final String LOGIN_URL = "/sessions/new";
-  private static final String OIDC_URL = "/sessions/init/" + OidcIdentityProvider.KEY + "?return_to=/projects";
   private static final String SKIP_REQUEST_PARAM = "auto_login=false";
 
   private final OidcConfiguration config;
@@ -59,8 +58,9 @@ public class AutoLoginFilter extends ServletFilter {
 
       // Skip if disabled via request parameter
       if (referrer == null || !referrer.endsWith(SKIP_REQUEST_PARAM)) {
-        LOGGER.debug("Redirecting to OIDC login page: {}", config.getBaseUrl() + OIDC_URL);
-        ((HttpServletResponse) response).sendRedirect(config.getBaseUrl() + OIDC_URL);
+        String loginPageUrl = config.getBaseUrl() + "/sessions/init/" + OidcIdentityProvider.KEY + "?return_to=" + config.getBaseUrl() + "/projects"
+        LOGGER.debug("Redirecting to OIDC login page: {}", loginPageUrl);
+        ((HttpServletResponse) response).sendRedirect(loginPageUrl);
         return;
       }
     }
