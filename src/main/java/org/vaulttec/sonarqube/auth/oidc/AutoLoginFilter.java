@@ -27,10 +27,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.sonar.api.server.ServerSide;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 import org.sonar.api.web.ServletFilter;
 
+@ServerSide
 public class AutoLoginFilter extends ServletFilter {
 
   private static final Logger LOGGER = Loggers.get(AutoLoginFilter.class);
