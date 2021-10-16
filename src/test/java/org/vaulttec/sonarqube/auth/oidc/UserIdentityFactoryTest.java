@@ -171,6 +171,16 @@ public class UserIdentityFactoryTest {
     assertThat(identity.getGroups()).containsAll(Arrays.asList("admins", "internal"));
   }
 
+  @Test
+  public void create_with_synched_groups_invalid_groups_claim_name() {
+    UserInfo userInfo = newUserInfo();
+    settings.setProperty("sonar.auth.oidc.groupsSync", true);
+    settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "invalid");
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getGroups()).isEmpty();
+  }
+
   private UserInfo newUserInfo() {
     UserInfo userInfo = null;
     try {
