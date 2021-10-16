@@ -176,7 +176,7 @@ public class OidcConfigurationTest {
   @Test
   public void without_base_url() {
     settings.setProperty(CoreProperties.SERVER_BASE_URL, (String) null);
-    assertThat(underTest.getBaseUrl()).isEqualTo("");
+    assertThat(underTest.getBaseUrl()).isEmpty();;
   }
 
   @Test
