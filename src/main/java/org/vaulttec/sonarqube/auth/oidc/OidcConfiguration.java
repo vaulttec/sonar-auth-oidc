@@ -55,7 +55,7 @@ public class OidcConfiguration {
   static final String ID_TOKEN_SIG_ALG_RSA = "RS256";
   static final String ID_TOKEN_SIG_ALG_ECDSA = "ES256";
 
-  private static final String SCOPES = PREFIX + ".scopes";
+  static final String SCOPES = PREFIX + ".scopes";
   private static final String SCOPES_DEFAULT_VALUE = "openid email profile";
 
   static final String LOGIN_STRATEGY = PREFIX + ".loginStrategy";
@@ -169,9 +169,10 @@ public class OidcConfiguration {
   public static List<PropertyDefinition> definitions() {
     int index = 1;
     return Arrays.asList(
-        PropertyDefinition.builder(ENABLED).name("Enabled")
-            .description(
-                "Enable OpenID Connect users to login. " + "Value is ignored if issuer URI and client ID are not defined.")
+        PropertyDefinition
+            .builder(ENABLED).name("Enabled")
+            .description("Enable OpenID Connect users to login. "
+                + "Value is ignored if issuer URI and client ID are not defined.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
             .build(),
         PropertyDefinition.builder(AUTO_LOGIN).name("Auto-Login")

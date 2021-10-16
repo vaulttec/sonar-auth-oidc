@@ -37,63 +37,62 @@ public class OidcConfigurationTest {
 
   @Test
   public void is_enabled() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
-
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
+    settings.setProperty(OidcConfiguration.ENABLED, true);
+    settings.setProperty(OidcConfiguration.ISSUER_URI, AUTH_URL);
+    settings.setProperty(OidcConfiguration.CLIENT_ID, "id");
     assertThat(underTest.isEnabled()).isTrue();
 
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", false);
+    settings.setProperty(OidcConfiguration.ENABLED, false);
     assertThat(underTest.isEnabled()).isFalse();
   }
 
   @Test
   public void is_enabled_always_return_false_when_issuer_uri_is_null() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", (String) null);
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
+    settings.setProperty(OidcConfiguration.ENABLED, true);
+    settings.setProperty(OidcConfiguration.ISSUER_URI, (String) null);
+    settings.setProperty(OidcConfiguration.CLIENT_ID, "id");
 
     assertThat(underTest.isEnabled()).isFalse();
   }
 
   @Test
   public void is_enabled_always_return_false_when_client_id_is_null() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", (String) null);
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
+    settings.setProperty(OidcConfiguration.ENABLED, true);
+    settings.setProperty(OidcConfiguration.ISSUER_URI, AUTH_URL);
+    settings.setProperty(OidcConfiguration.CLIENT_ID, (String) null);
 
     assertThat(underTest.isEnabled()).isFalse();
   }
 
   @Test
   public void is_auto_login() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".autoLogin", true);
+    settings.setProperty(OidcConfiguration.AUTO_LOGIN, true);
 
     assertThat(underTest.isAutoLogin()).isTrue();
   }
 
   @Test
   public void configure_issuer_uri() throws Exception {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
+    settings.setProperty(OidcConfiguration.ISSUER_URI, AUTH_URL);
 
     assertThat(underTest.issuerUri()).isEqualTo(AUTH_URL);
   }
 
   @Test
   public void return_client_id() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
+    settings.setProperty(OidcConfiguration.CLIENT_ID, "id");
     assertThat(underTest.clientId()).isEqualTo("id");
   }
 
   @Test
   public void return_client_secret() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientSecret.secured", "secret");
+    settings.setProperty(OidcConfiguration.CLIENT_SECRET, "secret");
     assertThat(underTest.clientSecret()).isEqualTo("secret");
   }
 
   @Test
   public void return_id_token_sign_algorithm() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".idTokenSigAlg", ID_TOKEN_SIG_ALG_RSA);
+    settings.setProperty(OidcConfiguration.ID_TOKEN_SIG_ALG, ID_TOKEN_SIG_ALG_RSA);
     assertThat(underTest.idTokenSignAlgorithm()).isEqualTo(ID_TOKEN_SIG_ALG_RSA);
   }
 
@@ -104,7 +103,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void return_login_strategy() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".loginStrategy", LOGIN_STRATEGY_PROVIDER_ID);
+    settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, LOGIN_STRATEGY_PROVIDER_ID);
     assertThat(underTest.loginStrategy()).isEqualTo(LOGIN_STRATEGY_PROVIDER_ID);
   }
 
@@ -115,50 +114,50 @@ public class OidcConfigurationTest {
 
   @Test
   public void allow_users_to_sign_up() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp", "true");
+    settings.setProperty(OidcConfiguration.ALLOW_USERS_TO_SIGN_UP, "true");
     assertThat(underTest.allowUsersToSignUp()).isTrue();
 
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".allowUsersToSignUp", "false");
+    settings.setProperty(OidcConfiguration.ALLOW_USERS_TO_SIGN_UP, "false");
     assertThat(underTest.allowUsersToSignUp()).isFalse();
   }
 
   @Test
   public void group_sync() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync", "true");
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, "true");
     assertThat(underTest.syncGroups()).isTrue();
 
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync", "false");
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, "false");
     assertThat(underTest.syncGroups()).isFalse();
   }
 
   @Test
   public void group_sync_claim_name() {
     assertThat(underTest.syncGroupsClaimName()).isEqualTo("groups");
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".groupsSync.claimName", "test");
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC_CLAIM_NAME, "test");
     assertThat(underTest.syncGroupsClaimName()).isEqualTo("test");
   }
 
   @Test
   public void scopes() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".scopes", "openid");
+    settings.setProperty(OidcConfiguration.SCOPES, "openid");
     assertThat(underTest.scopes()).isEqualTo("openid");
   }
 
   @Test
   public void icon_path() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".iconPath", "http://mydomain.com/myicon.png");
+    settings.setProperty(OidcConfiguration.ICON_PATH, "http://mydomain.com/myicon.png");
     assertThat(underTest.iconPath()).isEqualTo("http://mydomain.com/myicon.png");
   }
 
   @Test
   public void background_color() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".backgroundColor", "#123456");
+    settings.setProperty(OidcConfiguration.BACKGROUND_COLOR, "#123456");
     assertThat(underTest.backgroundColor()).isEqualTo("#123456");
   }
 
   @Test
   public void login_button_text() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".loginButtonText", "My Company Single-Sign-On");
+    settings.setProperty(OidcConfiguration.LOGIN_BUTTON_TEXT, "My Company Single-Sign-On");
     assertThat(underTest.loginButtonText()).isEqualTo("My Company Single-Sign-On");
   }
 
@@ -176,7 +175,7 @@ public class OidcConfigurationTest {
   @Test
   public void without_base_url() {
     settings.setProperty(CoreProperties.SERVER_BASE_URL, (String) null);
-    assertThat(underTest.getBaseUrl()).isEmpty();;
+    assertThat(underTest.getBaseUrl()).isEmpty();
   }
 
   @Test
