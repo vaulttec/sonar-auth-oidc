@@ -165,7 +165,7 @@ public class UserIdentityFactoryTest {
   @Test
   public void create_with_synched_groups() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty("sonar.auth.oidc.groupsSync", true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getGroups()).containsAll(Arrays.asList("admins", "internal"));
@@ -174,8 +174,8 @@ public class UserIdentityFactoryTest {
   @Test
   public void create_with_synched_groups_invalid_groups_claim_name() {
     UserInfo userInfo = newUserInfo();
-    settings.setProperty("sonar.auth.oidc.groupsSync", true);
-    settings.setProperty("sonar.auth.oidc.groupsSync.claimName", "invalid");
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC_CLAIM_NAME, "invalid");
 
     UserIdentity identity = underTest.create(userInfo);
     assertThat(identity.getGroups()).isEmpty();
