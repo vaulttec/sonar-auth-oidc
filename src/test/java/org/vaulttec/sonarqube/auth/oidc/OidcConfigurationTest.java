@@ -23,17 +23,21 @@ import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_
 import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
 
 import org.junit.Test;
+import org.sonar.api.CoreProperties;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.internal.MapSettings;
 
 public class OidcConfigurationTest {
+
+  private static final String SONAR_URL = "https://sonar.acme.com";
+  private static final String AUTH_URL = "https://auth.acme.com";
 
   private MapSettings settings = new MapSettings(new PropertyDefinitions(OidcConfiguration.definitions()));
   private OidcConfiguration underTest = new OidcConfiguration(settings.asConfig());
 
   @Test
   public void is_enabled() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", "id");
 
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
@@ -54,7 +58,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void is_enabled_always_return_false_when_client_id_is_null() {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".clientId.secured", (String) null);
     settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".enabled", true);
 
@@ -70,9 +74,9 @@ public class OidcConfigurationTest {
 
   @Test
   public void configure_issuer_uri() throws Exception {
-    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", "https://auth.acme.com");
+    settings.setProperty("sonar.auth." + OidcIdentityProvider.KEY + ".issuerUri", AUTH_URL);
 
-    assertThat(underTest.issuerUri()).isEqualTo("https://auth.acme.com");
+    assertThat(underTest.issuerUri()).isEqualTo(AUTH_URL);
   }
 
   @Test
@@ -95,7 +99,7 @@ public class OidcConfigurationTest {
 
   @Test
   public void default_id_token_sign_algorithm() {
-    assertThat(underTest.idTokenSignAlgorithm()).isNull();;
+    assertThat(underTest.idTokenSignAlgorithm()).isNull();
   }
 
   @Test
@@ -161,6 +165,24 @@ public class OidcConfigurationTest {
   @Test
   public void definitions() {
     assertThat(OidcConfiguration.definitions()).hasSize(15);
+  }
+
+  @Test
+  public void with_base_url() {
+    settings.setProperty(CoreProperties.SERVER_BASE_URL, SONAR_URL);
+    assertThat(underTest.getBaseUrl()).isEqualTo(SONAR_URL);
+  }
+
+  @Test
+  public void without_base_url() {
+    settings.setProperty(CoreProperties.SERVER_BASE_URL, (String) null);
+    assertThat(underTest.getBaseUrl()).isEqualTo("");
+  }
+
+  @Test
+  public void with_context() {
+    settings.setProperty("sonar.web.context", "sonar");
+    assertThat(underTest.getContextPath()).isEqualTo("sonar");
   }
 
 }
