@@ -89,10 +89,17 @@ public class OidcConfiguration {
   }
 
   public String getBaseUrl() {
-
     Optional<String> baseUrl = config.get(CoreProperties.SERVER_BASE_URL);
     if (baseUrl.isPresent()) {
       return baseUrl.get();
+    }
+    return "";
+  }
+
+  public String getContextPath() {
+    Optional<String> contextPath = config.get("sonar.web.context");
+    if (contextPath.isPresent()) {
+      return contextPath.get();
     }
     return "";
   }
@@ -164,7 +171,7 @@ public class OidcConfiguration {
     return Arrays.asList(
         PropertyDefinition.builder(ENABLED).name("Enabled")
             .description(
-                "Enable OpenID Connect users to login. " + "Value is ignored if client ID and secret are not defined.")
+                "Enable OpenID Connect users to login. " + "Value is ignored if issuer URI and client ID are not defined.")
             .category(CATEGORY).subCategory(SUBCATEGORY).type(BOOLEAN).defaultValue(valueOf(false)).index(index++)
             .build(),
         PropertyDefinition.builder(AUTO_LOGIN).name("Auto-Login")
