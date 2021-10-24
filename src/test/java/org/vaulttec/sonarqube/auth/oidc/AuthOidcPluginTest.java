@@ -22,27 +22,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.sonar.api.Plugin;
 import org.sonar.api.SonarQubeSide;
+import org.sonar.api.SonarRuntime;
+import org.sonar.api.internal.PluginContextImpl;
 import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
 
 public class AuthOidcPluginTest {
 
-  MockContext context = new MockContext();
-
   AuthOidcPlugin underTest = new AuthOidcPlugin();
 
   @Test
   @SuppressWarnings("unchecked")
-  public void test_extensions() throws Exception {
+  public void test_server_side_extensions() throws Exception {
+    SonarRuntime runtime = SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SERVER);
+    Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
     underTest.define(context);
 
     assertThat(context.getExtensions()).hasSize(20);
   }
 
-  private static class MockContext extends Plugin.Context {
-    MockContext() {
-      super(SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SERVER));
-    }
+  @Test
+  @SuppressWarnings("unchecked")
+  public void test_scnner_side_extensions() throws Exception {
+    SonarRuntime runtime = SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SCANNER);
+    Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
+    underTest.define(context);
+
+    assertThat(context.getExtensions()).isEmpty();
   }
 
 }
