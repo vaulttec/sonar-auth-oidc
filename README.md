@@ -74,7 +74,7 @@ In the Web Server log file the plugin's log entries can be identified by the pac
 
 ## Tested with
 
-* SonarQube 7.9.1, 8.2, 8.5.1
-* Keycloak 4.8.1.Final, 12.0.4
+* SonarQube 7.9.1, 8.2, 8.5.1, 9.2.4
+* Keycloak 4.8.1.Final, 12.0.4, 16.1.0
 * JetBrains Hub 2017.4
 * Okta 2018.25
