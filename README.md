@@ -47,7 +47,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
   - For synchronizing SonarQube groups create a mapper which adds group names to a custom userinfo claim in the ID token (the claim's name is used in the plugin configuration later on)
     ![Keycloak Mapper Configuration](docs/images/keycloak-mapper-config.png)
 
-    **Make sure that the identity provider creates a groups claim with multiple groups as a Json string array, e.g. `["Group 1", "Group 2", "Group 3"]`. Otherwise the plugin is not able to retrieve the group list from the userinfo claim. The userinfo Json object is available in [SonarQube's debug log](#troubleshooting).**
+    **Make sure that the identity provider creates a groups claim with groups marshalled as a JSON string <u>array</u>, e.g. `["Group"]` or `["Group 1", "Group 2", "Group 3"]`. Otherwise the plugin is not able to retrieve the group list from the userinfo claim. The userinfo JSON object is available in [SonarQube's debug log](#troubleshooting).**
 
   - The [provider's discovery URI](https://openid.net/specs/openid-connect-discovery-1_0.html) (without the [`/.well-known/openid-configuration`](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig) path) is needed for the plugin configuration (Issuer URI)
     ![Keycloak Client Configuration](docs/images/keycloak-endpoint-config.png)
@@ -62,7 +62,7 @@ If a [network proxy](https://docs.oracle.com/javase/8/docs/api/java/net/doc-file
 
   - For synchronizing groups the name of the custom userinfo claim must be the same as defined in the identity provider's group mapper.
 
-    **Make sure that the identity provider creates a groups claim with multiple groups as a Json string array, e.g. `["Group 1", "Group 2", "Group 3"]`. Otherwise the plugin is not able to retrieve the group list from the userinfo claim.**
+    **Make sure that the identity provider creates a groups claim with multiple groups as a JSON string <u>array</u>, e.g. `["Group"]` or `["Group 1", "Group 2", "Group 3"]`. Otherwise the plugin is not able to retrieve the group list from the userinfo claim.**
 
 ## Troubleshooting
 
