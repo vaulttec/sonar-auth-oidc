@@ -17,19 +17,18 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
-
 import org.junit.Test;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.server.authentication.UserIdentity;
+
+import java.util.Arrays;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 public class UserIdentityFactoryTest {
 
@@ -38,7 +37,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void create_for_provider_strategy() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -49,7 +48,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void create_for_unique_login_strategy() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -60,7 +59,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void create_for_preferred_username_login_strategy() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -71,7 +70,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void create_for_email_login_strategy() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -82,7 +81,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void create_for_custom_claim_strategy() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setClaim("upn", "johndoo");
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
 
@@ -94,7 +93,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void no_email() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setEmailAddress(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID);
 
@@ -106,7 +105,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void null_name_is_replaced_by_preferred_username() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setName(null);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -115,7 +114,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void throw_ISE_if_strategy_is_not_supported() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, "xxx");
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
@@ -124,7 +123,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void throw_ISE_if_missing_preferred_username() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setPreferredUsername(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME);
 
@@ -134,7 +133,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void throw_ISE_if_missing_email() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setEmailAddress(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_EMAIL);
 
@@ -144,7 +143,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void throw_ISE_if_missing_name_and_preferred_username() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     userInfo.setName(null);
     userInfo.setPreferredUsername(null);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_UNIQUE);
@@ -155,7 +154,7 @@ public class UserIdentityFactoryTest {
 
   @Test
   public void throw_ISE_if_missing_custom_claim() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.LOGIN_STRATEGY, OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM);
 
     IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
@@ -163,8 +162,8 @@ public class UserIdentityFactoryTest {
   }
 
   @Test
-  public void create_with_synched_groups() {
-    UserInfo userInfo = newUserInfo();
+  public void create_with_synched_multiple_groups_as_list() {
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
 
     UserIdentity identity = underTest.create(userInfo);
@@ -172,19 +171,50 @@ public class UserIdentityFactoryTest {
   }
 
   @Test
+  public void create_with_synched_multiple_groups_as_string() {
+    UserInfo userInfo = newUserInfo(false, true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getGroups()).containsAll(Arrays.asList("admins", "internal"));
+  }
+
+  @Test
+  public void create_with_synched_single_group_as_list() {
+    UserInfo userInfo = newUserInfo(true, false);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC_CLAIM_NAME, "group");
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getGroups()).containsExactly("admins");
+  }
+
+  @Test
+  public void create_with_synched_single_group_as_string() {
+    UserInfo userInfo = newUserInfo(true, true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
+    settings.setProperty(OidcConfiguration.GROUPS_SYNC_CLAIM_NAME, "group");
+
+    UserIdentity identity = underTest.create(userInfo);
+    assertThat(identity.getGroups()).containsExactly("admins");
+  }
+
+  @Test
   public void create_with_synched_groups_invalid_groups_claim_name() {
-    UserInfo userInfo = newUserInfo();
+    UserInfo userInfo = newUserInfo(false, false);
     settings.setProperty(OidcConfiguration.GROUPS_SYNC, true);
     settings.setProperty(OidcConfiguration.GROUPS_SYNC_CLAIM_NAME, "invalid");
 
-    UserIdentity identity = underTest.create(userInfo);
-    assertThat(identity.getGroups()).isEmpty();
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.create(userInfo));
+    assertTrue(exception.getMessage().startsWith("Groups claim 'invalid' is missing in user info"));
   }
 
-  private UserInfo newUserInfo() {
-    UserInfo userInfo = null;
+  private UserInfo newUserInfo(boolean singleGroup, boolean string) {
     try {
-      return UserInfo.parse("{\"sub\":\"8f63a486-6699-4f25-beef-118dd240bef8\",\"groups\":[\"admins\",\"internal\"],"
+      return UserInfo.parse("{\"sub\":\"8f63a486-6699-4f25-beef-118dd240bef8\"," +
+          (singleGroup ?
+              (string ? "\"group\":\"admins\"," : "\"group\":[\"admins\"],") :
+              (string ? "\"groups\":\"admins, internal\"," : "\"groups\":[\"admins\",\"internal\"],"))
           + "\"iss\":\"http://localhost/auth/realms/sso\",\"typ\":\"ID\",\"preferred_username\":\"jdoo\","
           + "\"given_name\":\"John\",\"aud\":\"sonarqube\",\"acr\":\"1\",\"nbf\":0,\"azp\":\"sonarqube\","
           + "\"auth_time\":1514307002,\"name\":\"John Doo\",\"exp\":1514307302,"
@@ -194,7 +224,7 @@ public class UserIdentityFactoryTest {
     } catch (ParseException e) {
       // ignore
     }
-    return userInfo;
+    return null;
   }
 
 }

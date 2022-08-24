@@ -17,22 +17,16 @@
  */
 package org.vaulttec.sonarqube.auth.oidc;
 
-import static java.lang.String.format;
-import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_EMAIL;
-import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PREFERRED_USERNAME;
-import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_PROVIDER_ID;
-import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_UNIQUE;
-import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.LOGIN_STRATEGY_CUSTOM_CLAIM;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.server.authentication.UserIdentity;
 
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static org.vaulttec.sonarqube.auth.oidc.OidcConfiguration.*;
 
 /**
  * Converts OpenID Connect {@link UserInfo} to SonarQube {@link UserIdentity}.
@@ -93,14 +87,32 @@ public class UserIdentityFactory {
     String name = userInfo.getName() != null ? userInfo.getName() : userInfo.getPreferredUsername();
     if (name == null) {
       throw new IllegalStateException("Claims 'name' and 'preferred_username' are missing in user info - "
-          + "make sure your OIDC provider supports these claims in the id token or at the user info endpoint");
+          + "make sure your OIDC provider supports at least one of these claims in the id token or at the user info endpoint");
     }
     return name;
   }
 
   private Set<String> getGroups(UserInfo userInfo) {
-    List<String> groupsClaim = userInfo.getStringListClaim(config.syncGroupsClaimName());
-    return groupsClaim != null ? new HashSet<>(groupsClaim) : Collections.emptySet();
+    Object groupsClaim = userInfo.getClaim(config.syncGroupsClaimName());
+    if (groupsClaim == null) {
+      throw new IllegalStateException("Groups claim '" + config.syncGroupsClaimName() + "' is missing in user info - "
+          + "make sure your OIDC provider supports this claim in the id token or at the user info endpoint");
+    }
+    List<String> groups;
+    if (groupsClaim instanceof List) {
+      groups = (List) groupsClaim;
+    } else { // String
+      if (((String) groupsClaim).contains(",")) {
+        // comma-separated list of groups
+        groups = Stream.of(((String) groupsClaim).split(","))
+            .map(String::trim)
+            .collect(Collectors.toList());
+      } else {
+        // single group
+        groups = Collections.singletonList((String) groupsClaim);
+      }
+    }
+    return new HashSet<>(groups);
   }
 
 }
