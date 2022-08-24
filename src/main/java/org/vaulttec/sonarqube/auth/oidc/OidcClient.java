@@ -100,7 +100,7 @@ public class OidcClient {
   public AuthorizationCode getAuthorizationCode(HttpServletRequest callbackRequest) {
     LOGGER.trace("Retrieving authorization code from callback request's query parameters: {}",
         callbackRequest.getQueryString());
-    AuthenticationResponse authResponse = null;
+    AuthenticationResponse authResponse;
     try {
       HTTPRequest request = ServletUtils.createHTTPRequest(callbackRequest);
       authResponse = AuthenticationResponseParser.parse(request.getURL().toURI(), request.getQueryParameters());

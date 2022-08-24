@@ -90,18 +90,12 @@ public class OidcConfiguration {
 
   public String getBaseUrl() {
     Optional<String> baseUrl = config.get(CoreProperties.SERVER_BASE_URL);
-    if (baseUrl.isPresent()) {
-      return baseUrl.get();
-    }
-    return "";
+    return baseUrl.orElse("");
   }
 
   public String getContextPath() {
     Optional<String> contextPath = config.get("sonar.web.context");
-    if (contextPath.isPresent()) {
-      return contextPath.get();
-    }
-    return "";
+    return contextPath.orElse("");
   }
 
   public boolean isEnabled() {

@@ -32,7 +32,6 @@ public class AuthOidcPluginTest {
   AuthOidcPlugin underTest = new AuthOidcPlugin();
 
   @Test
-  @SuppressWarnings("unchecked")
   public void test_server_side_extensions() throws Exception {
     SonarRuntime runtime = SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SERVER);
     Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
@@ -42,7 +41,6 @@ public class AuthOidcPluginTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void test_scnner_side_extensions() throws Exception {
     SonarRuntime runtime = SonarRuntimeImpl.forSonarQube(Version.create(7, 6), SonarQubeSide.SCANNER);
     Plugin.Context context = new PluginContextImpl.Builder().setSonarRuntime(runtime).build();
