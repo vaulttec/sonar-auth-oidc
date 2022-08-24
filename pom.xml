@@ -24,8 +24,8 @@
 		<sonar.pluginClass>org.vaulttec.sonarqube.auth.oidc.AuthOidcPlugin</sonar.pluginClass>
 		<sonar.pluginKey>authoidc</sonar.pluginKey>
 		<sonar-plugin-api.version>7.4</sonar-plugin-api.version>
-		<nimbusds-oidc-sdk.version>9.18</nimbusds-oidc-sdk.version>
-		<nimbusds-jose-jwt.version>9.15.2</nimbusds-jose-jwt.version>
+		<nimbusds-oidc-sdk.version>9.41</nimbusds-oidc-sdk.version>
+		<nimbusds-jose-jwt.version>9.24.2</nimbusds-jose-jwt.version>
 
 		<license.name>AL2</license.name>
 		<license.owner>Torsten Juergeleit</license.owner>
@@ -69,7 +69,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0-M3</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>enforce-versions</id>
@@ -92,7 +92,7 @@
 			<plugin>
 				<groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
 				<artifactId>sonar-packaging-maven-plugin</artifactId>
-				<version>1.20.0.405</version>
+				<version>1.21.0.505</version>
 				<extensions>true</extensions>
 				<configuration>
 					<pluginClass>org.vaulttec.sonarqube.auth.oidc.AuthOidcPlugin</pluginClass>
@@ -101,7 +101,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.10.1</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
@@ -110,7 +110,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-	            <version>3.0.0-M4</version>
+	            <version>3.0.0-M6</version>
 	            <configuration>
 	                <tagNameFormat>v@{project.version}</tagNameFormat>
 	            </configuration>
@@ -119,7 +119,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.0.0-M1</version>
+				<version>3.0.0</version>
 				<configuration>
 					<skip>true</skip>
 				</configuration>
@@ -147,7 +147,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<version>3.0.1</version>
+			<version>4.0.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -160,19 +160,19 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
-			<version>3.15.0</version>
+			<version>3.23.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.3.3</version>
+			<version>4.7.0</version>
 			<scope>test</scope>
 			<exclusions>
 				<exclusion>
@@ -184,7 +184,7 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>mockwebserver</artifactId>
-			<version>4.4.1</version>
+			<version>4.10.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
