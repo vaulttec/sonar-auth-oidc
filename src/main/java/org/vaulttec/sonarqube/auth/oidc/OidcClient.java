@@ -119,21 +119,7 @@ public class OidcClient {
   public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
     LOGGER.trace("Getting user info for authorization code");
     OIDCProviderMetadata providerMetadata = getProviderMetadata();
-    TokenResponse tokenResponse = getTokenResponse(providerMetadata.getTokenEndpointURI(), authorizationCode,
-        callbackUrl);
-    if (tokenResponse instanceof TokenErrorResponse) {
-      ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
-      if (errorObject == null || errorObject.getCode() == null) {
-        throw new IllegalStateException("Token request failed: No error code returned "
-            + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
-      } else {
-        throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
-      }
-    }
-    OIDCTokens oidcTokens = ((OIDCTokenResponse) tokenResponse).getOIDCTokens();
-    if (isIdTokenSigned()) {
-      validateIdToken(providerMetadata.getIssuer(), providerMetadata.getJWKSetURI(), oidcTokens.getIDToken());
-    }
+    OIDCTokens oidcTokens = getOidcTokens(authorizationCode, callbackUrl, providerMetadata);
 
     UserInfo userInfo;
     try {
@@ -161,9 +147,28 @@ public class OidcClient {
     return userInfo;
   }
 
+  private OIDCTokens getOidcTokens(AuthorizationCode authorizationCode, String callbackUrl, OIDCProviderMetadata providerMetadata) {
+    LOGGER.trace("Retrieving OIDC tokens with user info claims set from {}", providerMetadata.getTokenEndpointURI());
+    TokenResponse tokenResponse = getTokenResponse(providerMetadata.getTokenEndpointURI(), authorizationCode,
+        callbackUrl);
+    if (tokenResponse instanceof TokenErrorResponse) {
+      ErrorObject errorObject = ((TokenErrorResponse) tokenResponse).getErrorObject();
+      if (errorObject == null || errorObject.getCode() == null) {
+        throw new IllegalStateException("Token request failed: No error code returned "
+            + "(identity provider not reachable - check network proxy setting 'http.nonProxyHosts' in 'sonar.properties')");
+      } else {
+        throw new IllegalStateException("Token request failed: " + errorObject.toJSONObject());
+      }
+    }
+    OIDCTokens oidcTokens = ((OIDCTokenResponse) tokenResponse).getOIDCTokens();
+    if (isIdTokenSigned()) {
+      validateIdToken(providerMetadata.getIssuer(), providerMetadata.getJWKSetURI(), oidcTokens.getIDToken());
+    }
+    return oidcTokens;
+  }
+
   protected TokenResponse getTokenResponse(URI tokenEndpointURI, AuthorizationCode authorizationCode,
       String callbackUrl) {
-    LOGGER.trace("Retrieving OIDC tokens with user info claims set from {}", tokenEndpointURI);
     try {
       TokenRequest request = new TokenRequest(tokenEndpointURI, new ClientSecretBasic(getClientId(), getClientSecret()),
           new AuthorizationCodeGrant(authorizationCode, new URI(callbackUrl)));
@@ -178,7 +183,7 @@ public class OidcClient {
     }
   }
 
-  protected void validateIdToken(Issuer issuer, URI jwkSetURI, JWT idToken) {
+  private void validateIdToken(Issuer issuer, URI jwkSetURI, JWT idToken) {
     LOGGER.trace("Validating ID token with {} and key set from from {}", getIdTokenSignAlgorithm(), jwkSetURI);
     try {
       IDTokenValidator validator = createValidator(issuer, jwkSetURI.toURL());
