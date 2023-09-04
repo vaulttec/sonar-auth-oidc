@@ -84,7 +84,7 @@ public class OidcClient {
 
   public AuthenticationRequest createAuthenticationRequest(String callbackUrl, String state) {
     AuthenticationRequest request;
-    LOGGER.trace("Creating authentication request");
+    LOGGER.debug("Creating authentication request");
     OIDCProviderMetadata providerMetadata = getProviderMetadata();
     try {
       Builder builder = new AuthenticationRequest.Builder(RESPONSE_TYPE, getScope(), getClientId(),
@@ -98,7 +98,7 @@ public class OidcClient {
   }
 
   public AuthorizationCode getAuthorizationCode(HttpServletRequest callbackRequest) {
-    LOGGER.trace("Retrieving authorization code from callback request's query parameters: {}",
+    LOGGER.debug("Retrieving authorization code from callback request's query parameters: {}",
         callbackRequest.getQueryString());
     AuthenticationResponse authResponse;
     try {
@@ -117,7 +117,7 @@ public class OidcClient {
   }
 
   public UserInfo getUserInfo(AuthorizationCode authorizationCode, String callbackUrl) {
-    LOGGER.trace("Getting user info for authorization code");
+    LOGGER.debug("Getting user info for authorization code");
     OIDCProviderMetadata providerMetadata = getProviderMetadata();
     OIDCTokens oidcTokens = getOidcTokens(authorizationCode, callbackUrl, providerMetadata);
 
@@ -148,7 +148,7 @@ public class OidcClient {
   }
 
   private OIDCTokens getOidcTokens(AuthorizationCode authorizationCode, String callbackUrl, OIDCProviderMetadata providerMetadata) {
-    LOGGER.trace("Retrieving OIDC tokens with user info claims set from {}", providerMetadata.getTokenEndpointURI());
+    LOGGER.debug("Retrieving OIDC tokens with user info claims set from {}", providerMetadata.getTokenEndpointURI());
     TokenResponse tokenResponse = getTokenResponse(providerMetadata.getTokenEndpointURI(), authorizationCode,
         callbackUrl);
     if (tokenResponse instanceof TokenErrorResponse) {
@@ -184,7 +184,7 @@ public class OidcClient {
   }
 
   private void validateIdToken(Issuer issuer, URI jwkSetURI, JWT idToken) {
-    LOGGER.trace("Validating ID token with {} and key set from from {}", getIdTokenSignAlgorithm(), jwkSetURI);
+    LOGGER.debug("Validating ID token with {} and key set from from {}", getIdTokenSignAlgorithm(), jwkSetURI);
     try {
       IDTokenValidator validator = createValidator(issuer, jwkSetURI.toURL());
       validator.validate(idToken, null);
@@ -202,7 +202,7 @@ public class OidcClient {
   }
 
   protected UserInfoResponse getUserInfoResponse(URI userInfoEndpointURI, BearerAccessToken accessToken) {
-    LOGGER.trace("Retrieving user info from {}", userInfoEndpointURI);
+    LOGGER.debug("Retrieving user info from {}", userInfoEndpointURI);
     try {
       UserInfoRequest request = new UserInfoRequest(userInfoEndpointURI, accessToken);
       HTTPResponse response = request.toHTTPRequest().send();
@@ -217,11 +217,16 @@ public class OidcClient {
   }
 
   protected OIDCProviderMetadata getProviderMetadata() {
-    LOGGER.trace("Retrieving provider metadata from {}", config.issuerUri());
+    LOGGER.debug("Retrieving provider metadata from {}", config.issuerUri());
     try {
       return OIDCProviderMetadata.resolve(new Issuer(config.issuerUri()));
     } catch (IOException | GeneralException e) {
-      throw new IllegalStateException("Retrieving OpenID Connect provider metadata failed", e);
+      if (e instanceof GeneralException && e.getMessage().contains("issuer doesn't match")) {
+        throw new IllegalStateException("Retrieving OpenID Connect provider metadata failed: " +
+                "Issuer URL in provider metadata doesn't match the issuer URI specified in plugin configuration");
+      } else {
+        throw new IllegalStateException("Retrieving OpenID Connect provider metadata failed", e);
+      }
     }
   }
 

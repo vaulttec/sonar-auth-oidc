@@ -71,26 +71,26 @@ public class OidcIdentityProvider implements OAuth2IdentityProvider {
 
   @Override
   public void init(InitContext context) {
-    LOGGER.trace("Starting authentication workflow");
+    LOGGER.debug("Starting authentication workflow");
     if (!isEnabled()) {
       throw new IllegalStateException("OpenID Connect authentication is disabled");
     }
     String state = context.generateCsrfState();
     AuthenticationRequest authenticationRequest = client.createAuthenticationRequest(context.getCallbackUrl(), state);
-    LOGGER.trace("Redirecting to authentication endpoint");
+    LOGGER.debug("Redirecting to authentication endpoint");
     context.redirectTo(authenticationRequest.toURI().toString());
   }
 
   @Override
   public void callback(CallbackContext context) {
-    LOGGER.trace("Handling authentication response");
+    LOGGER.debug("Handling authentication response");
     context.verifyCsrfState();
     AuthorizationCode authorizationCode = client.getAuthorizationCode(context.getRequest());
     UserInfo userInfo = client.getUserInfo(authorizationCode, context.getCallbackUrl());
     UserIdentity userIdentity = userIdentityFactory.create(userInfo);
     LOGGER.debug("Authenticating user '{}' with groups {}", userIdentity.getProviderLogin(), userIdentity.getGroups());
     context.authenticate(userIdentity);
-    LOGGER.trace("Redirecting to requested page");
+    LOGGER.debug("Redirecting to requested page");
     context.redirectToRequestedPage();
   }
 
