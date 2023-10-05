@@ -90,4 +90,16 @@ public abstract class AbstractOidcTest {
     return client;
   }
 
+  protected OidcClient createSpyOidcClient2() {
+    OidcClient client = spy(new OidcClient(config));
+    doReturn(getProviderMetadata(config.issuerUri())).when(client).getProviderMetadata();
+    return client;
+  }
+
+  protected OidcClient createSpyOidcClient3() {
+    OidcClient client = spy(new OidcClient(config));
+    return client;
+  }
+
+
 }

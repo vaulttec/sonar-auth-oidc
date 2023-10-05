@@ -45,7 +45,7 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 
-public class IntegrationTest extends AbstractOidcTest {
+public class SecondIntegrationTest extends AbstractOidcTest {
 
   @Rule
   public MockWebServer idp = new MockWebServer();
@@ -58,86 +58,40 @@ public class IntegrationTest extends AbstractOidcTest {
   @Before
   public void init() {
     setSettings(true, idpUri);
-    oidcClient = createSpyOidcClient();
+    oidcClient = createSpyOidcClient2();
     userIdentityFactory = new UserIdentityFactory(config);
     underTest = new OidcIdentityProvider(config, oidcClient, userIdentityFactory);
   }
 
   /**
-   * Second phase: OpenID connect provider redirects browser to SonarQube at
-   * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
-   * access / ID token request to the OpenID connect provider.
+   * First phase: SonarQube redirects browser to OpenID connect provider's
+   * authentication form, requesting the minimal access rights ("scope") to get
+   * user profile.
    */
   @Test
-  public void callback_on_successful_authentication() throws IOException, InterruptedException {
-    idp.enqueue(newSuccessfulAccessTokenResponse());
-    HttpServletRequest request = newAuthenticationRequest();
-    DumbCallbackContext callbackContext = new DumbCallbackContext(request);
-    underTest.callback(callbackContext);
-
-    // generate an unique login by default (suffixed by "@oidc"), instead of copying
-    // oidc login as-this.
-    assertThat(callbackContext.userIdentity.getProviderLogin()).isEqualTo("john.doo");
-    assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
-    assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
-    assertThat(callbackContext.userIdentity.getGroups()).hasSize(2);
-    assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
-
-    // verify the requests sent to OpenID Connect provider
-    RecordedRequest accessTokenRequest = idp.takeRequest();
-    assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
+  public void redirect_browser_to_oidc_authentication_form() throws Exception {
+    DumbInitContext context = new DumbInitContext("the-csrf-state");
+    underTest.init(context);
+    assertThat(context.redirectedTo).startsWith(idp.url("protocol/openid-connect/auth").toString())
+        .contains("scope=" + encode("openid email profile", StandardCharsets.UTF_8.name()));
   }
 
-  /**
-   * Second phase: OpenID connect provider redirects browser to SonarQube at
-   * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
-   * access / ID token request to the OpenID connect provider. Due to missing user
-   * profile information in the ID token an additional request is necessary.
-   */
   @Test
-  public void callback_on_successful_authentication_with_additional_user_info_request()
-      throws IOException, InterruptedException {
-    idp.enqueue(newSuccessfulAccessTokenResponseWithoutUserInfo());
-    idp.enqueue(newUserInfoResponse());
-    HttpServletRequest request = newAuthenticationRequest();
-    DumbCallbackContext callbackContext = new DumbCallbackContext(request);
-    underTest.callback(callbackContext);
+  public void callback_throws_ISE_if_error_when_requesting_id_token() throws InterruptedException {
+    idp.enqueue(new MockResponse().addHeader("Content-Type", ContentType.APPLICATION_JSON).setResponseCode(500)
+        .setBody("{\"error\":\"invalid_grant\",\"error_description\":\"Invalid resource owner credentials\"}"));
+    DumbCallbackContext callbackContext = new DumbCallbackContext(newAuthenticationRequest());
 
-    // generate an unique login by default (suffixed by "@oidc"), instead of copying
-    // oidc login as-this.
-    assertThat(callbackContext.userIdentity.getProviderLogin()).isEqualTo("john.doo");
-    assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
-    assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
-    assertThat(callbackContext.userIdentity.getGroups()).hasSize(2);
-    assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
-
-    // verify the requests sent to OpenID Connect provider
-    RecordedRequest accessTokenRequest = idp.takeRequest();
-    assertThat(accessTokenRequest.getPath()).startsWith("/protocol/openid-connect/token");
-  }
-
-  /**
-   * Second phase: OpenID connect provider redirects browser to SonarQube at
-   * /oauth/callback/oidc?code={the access code}. This SonarQube web service sends
-   * access / ID token request to the OpenID connect provider. Due to missing user
-   * profile information in the ID token an additional request is necessary.
-   */
-  @Test
-  public void callback_on_successful_authentication_with_additional_user_info_request_for_groups()
-      throws IOException, InterruptedException {
-    idp.enqueue(newSuccessfulAccessTokenResponseWithoutGroupsClaim());
-    idp.enqueue(newUserInfoResponse());
-    HttpServletRequest request = newAuthenticationRequest();
-    DumbCallbackContext callbackContext = new DumbCallbackContext(request);
-    underTest.callback(callbackContext);
-
-    // generate an unique login by default (suffixed by "@oidc"), instead of copying
-    // oidc login as-this.
-    assertThat(callbackContext.userIdentity.getProviderLogin()).isEqualTo("john.doo");
-    assertThat(callbackContext.userIdentity.getName()).isEqualTo("John Doo");
-    assertThat(callbackContext.userIdentity.getEmail()).isEqualTo("john.doo@acme.com");
-    assertThat(callbackContext.userIdentity.getGroups()).hasSize(2);
-    assertThat(callbackContext.redirectedToRequestedPage.get()).isTrue();
+    try {
+      underTest.callback(callbackContext);
+      failBecauseExceptionWasNotThrown(IllegalStateException.class);
+    } catch (IllegalStateException e) {
+      assertEquals("Token request failed: {\"error_description\":\"Invalid resource owner credentials\","
+          + "\"error\":\"invalid_grant\"}", e.getMessage());
+    }
+    assertThat(callbackContext.csrfStateVerified.get()).isTrue();
+    assertThat(callbackContext.userIdentity).isNull();
+    assertThat(callbackContext.redirectedToRequestedPage.get()).isFalse();
 
     // verify the requests sent to OpenID Connect provider
     RecordedRequest accessTokenRequest = idp.takeRequest();
