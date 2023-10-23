@@ -33,7 +33,7 @@ import org.junit.Test;
 import org.sonar.api.server.authentication.Display;
 import org.sonar.api.server.authentication.OAuth2IdentityProvider;
 
-public class OidcIdentityProviderTest extends AbstractOidcTest {
+public class SecondOidcIdentityProviderTest extends AbstractOidcTest {
 
   private UserIdentityFactory userIdentityFactory = mock(UserIdentityFactory.class);
   private OidcClient client = newMockClient();
@@ -41,31 +41,58 @@ public class OidcIdentityProviderTest extends AbstractOidcTest {
   private OidcIdentityProvider underTest = new OidcIdentityProvider(config, client, userIdentityFactory);
 
   @Test
-  public void init() throws Exception {
-    setSettings(true);
-    OAuth2IdentityProvider.InitContext context = mock(OAuth2IdentityProvider.InitContext.class);
-    when(context.generateCsrfState()).thenReturn(STATE);
-    when(context.getCallbackUrl()).thenReturn(CALLBACK_URL);
-    settings.setProperty(OidcConfiguration.ISSUER_URI, ISSUER_URI);
-
-    underTest.init(context);
-
-    verify(context).redirectTo(ISSUER_URI + "/protocol/openid-connect/auth?response_type=code&client_id=id"
-        + "&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback%2Foidc&scope=openid+email+profile&state=state");
+  public void check_fields() throws Exception {
+    assertThat(underTest.getKey()).isEqualTo("oidc");
   }
 
+  @Test
+  public void custom_name() throws Exception {
+    settings.setProperty(OidcConfiguration.LOGIN_BUTTON_TEXT, "My text");
+    assertThat(underTest.getName()).isEqualTo("My text");
+  }
+
+  @Test
+  public void is_enabled() throws Exception {
+    settings.setProperty(OidcConfiguration.ENABLED, true);
+    settings.setProperty(OidcConfiguration.ISSUER_URI, ISSUER_URI);
+    settings.setProperty(OidcConfiguration.CLIENT_ID, "id");
+    assertThat(underTest.isEnabled()).isTrue();
+
+    settings.setProperty(OidcConfiguration.ENABLED, false);
+    assertThat(underTest.isEnabled()).isFalse();
+  }
+
+  @Test
+  public void should_allow_users_to_signup() {
+    assertThat(underTest.allowsUsersToSignUp()).as("default").isFalse();
+
+    settings.setProperty(OidcConfiguration.ALLOW_USERS_TO_SIGN_UP, true);
+    assertThat(underTest.allowsUsersToSignUp()).isTrue();
+  }
+
+  @Test
+  public void fail_to_init_when_disabled() throws Exception {
+    setSettings(false);
+    OAuth2IdentityProvider.InitContext context = mock(OAuth2IdentityProvider.InitContext.class);
+
+    IllegalStateException exception = assertThrows(IllegalStateException.class, () -> underTest.init(context));
+    assertTrue(exception.getMessage().contains("OpenID Connect authentication is disabled"));
+  }
+
+  @Test
+  public void display() {
+    settings.setProperty(OidcConfiguration.ICON_PATH, "my_path");
+    settings.setProperty(OidcConfiguration.BACKGROUND_COLOR, "#123456");
+
+    Display display = underTest.getDisplay();
+    assertThat(display).isNotNull();
+    assertThat(display.getIconPath()).isEqualTo("my_path");
+    assertThat(display.getBackgroundColor()).isEqualTo("#123456");
+  }
 
   private OidcClient newMockClient() {
     OidcClient mockClient = mock(OidcClient.class);
     AuthenticationRequest request = mock(AuthenticationRequest.class);
-    try {
-      when(request.toURI())
-          .thenReturn(new URI(ISSUER_URI + "/protocol/openid-connect/auth" + "?response_type=code&client_id=id"
-              + "&redirect_uri=http%3A%2F%2Flocalhost%2Fcallback%2Foidc" + "&scope=openid+email+profile&state=state"));
-    } catch (URISyntaxException e) {
-      // ignore
-    }
-    when(mockClient.createAuthenticationRequest(CALLBACK_URL, STATE)).thenReturn(request);
     return mockClient;
   }
 
